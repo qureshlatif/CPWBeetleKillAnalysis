@@ -6,7 +6,7 @@ setwd("F:/research stuff/BCR/projects/CPW")
 dat.Ivan <- read.csv("JIvan_files/PCPointsWithConifData.csv", header=T, stringsAsFactors = F) %>%
   tbl_df %>%
   mutate(Point = str_c(Transect, "-", str_pad(PointNumber, width = 2, side = "left", pad = "0"))) %>%
-  select(Transect, Point, PointCountDate, CanopyPct:SilverConifCover)
+  select(Transect, Point, PointCountDate, CanopyPct:SilverESCover)
 dat.missing <- read.csv("JIvan_files/MissingHabitatData.csv", header=T, stringsAsFactors = F) %>%
   tbl_df %>%
   mutate(Point = str_c(Transect, "-", str_pad(Point, width = 2, side = "left", pad = "0")))
@@ -37,6 +37,8 @@ dat.DeadConif <- dat.Ivan %>% select(Point, DeadConifPct, DeadConifCover) %>%
   rename(DeadConif_RCov = DeadConifPct, DeadConif_Cov = DeadConifCover)
 
 ### Compile covariates from D. Pavlacky ###
+
+## Overstory ##
 # Plant codes #
 # AL = Alder
 # AS = Aspen
@@ -48,7 +50,7 @@ dat.DeadConif <- dat.Ivan %>% select(Point, DeadConifPct, DeadConifCover) %>%
 # ES = Engelmann spruce
 # JU = Juniper
 # LM = Limber pine
-# MA = ?? (4 records; OVABUND = -1 for CO-CPW-LP-053-14)
+# MA = Rocky Mountain Maple (4 records; OVABUND = -1 for CO-CPW-LP-053-14)
 # PC = Plains Cottonwood
 # PP = Ponderosa pine
 # PY = Pinyon Pine
@@ -63,9 +65,8 @@ dat.overstory <- read.csv("CPW_veg_query_2_overstory.csv", header=T, stringsAsFa
   mutate(Point = str_c(TransectNum, "-", str_pad(Point, width = 2, side = "left", pad = "0"))) %>%
   select(TransectNum, Point, o_canopy_percent, OVSPP:PointVisitID) %>%
   mutate(OVABUND = OVABUND %>% as.integer) %>%
-  mutate(OVABUND = replace(OVABUND, which(OVABUND == -1), 1)) %>% #***Need to ask about this***
-  unique
-dat.overstory <- dat.overstory %>%
+  filter(!OVABUND == -1) %>% #This record doesn't appear in CPW database, so deleting from here.
+  unique %>%
   mutate(o_canopy_percent = replace(o_canopy_percent, which(Point %in% blanks_more), NA))
 #sum(duplicated(dat.overstory %>% select(Point, OVSPP))) # no duplicates found
 #check <- dat.overstory %>%
@@ -92,13 +93,15 @@ dat.overstory2 <- dat.overstory %>%
   left_join(dat.overstory %>%
               filter(OVSPP %in% c("LP", "LM", "PP", "PY", "BR")) %>%
               select(Point, OVABUND) %>%
+              group_by(Point) %>%
+              summarise(OVABUND = sum(OVABUND)) %>%
               rename(RCOV_Pine = OVABUND), by = "Point") %>%
   # Aspen cover #
   left_join(dat.overstory %>%
               filter(OVSPP == "AS") %>%
               select(Point, OVABUND) %>%
               rename(RCOV_AS = OVABUND), by = "Point") %>%
-  # Aspen cover #
+  # Douglas fir #
   left_join(dat.overstory %>%
               filter(OVSPP == "DF") %>%
               select(Point, OVABUND) %>%
@@ -111,37 +114,39 @@ dat.overstory2 <- dat.overstory %>%
               ungroup, by = "Point") %>%
   mutate_at(vars(RCOV_ES:RCOV_OT), funs(replace(.,is.na(.),0))) %>%
   mutate(RCOV_TOT = RCOV_ES + RCOV_SU + RCOV_Pine + RCOV_AS + RCOV_DF + RCOV_OT) %>%
-  mutate(RCOV_ES = RCOV_ES/RCOV_TOT, RCOV_SU = RCOV_SU/RCOV_TOT, RCOV_Pine = RCOV_Pine/RCOV_TOT,
-         RCOV_AS = RCOV_AS/RCOV_TOT, RCOV_DF = RCOV_DF/RCOV_TOT, RCOV_OT = RCOV_OT/RCOV_TOT) %>%
+  mutate(RCOV_ES = replace(RCOV_ES, which(RCOV_TOT != 100), NA),
+         RCOV_SU = replace(RCOV_SU, which(RCOV_TOT != 100), NA),
+         RCOV_Pine = replace(RCOV_Pine, which(RCOV_TOT != 100), NA),
+         RCOV_AS = replace(RCOV_AS, which(RCOV_TOT != 100), NA),
+         RCOV_DF = replace(RCOV_DF, which(RCOV_TOT != 100), NA),
+         RCOV_OT = replace(RCOV_OT, which(RCOV_TOT != 100), NA)) %>%
   select(-RCOV_TOT)
 
+dat.final <- dat.DeadConif %>% left_join(dat.overstory2 %>%
+                                           select(-Stratum),
+                                         by = "Point")
+
+## Shrubs ##
 dat.shrub <- read.csv("CPW_veg_query_2_shrub.csv", header=T, stringsAsFactors = F) %>%
   tbl_df %>% 
   mutate(Point = str_c(TransectNum, "-", str_pad(Point, width = 2, side = "left", pad = "0"))) %>%
-  unique
+  unique %>%
+  mutate(SHABUND = SHABUND %>% as.integer) %>%
+  filter(!SHABUND == -1)
 #sum(duplicated(dat.shrub %>% select(Point, SHSPP))) # 6 found
 #pntsWDups <- dat.shrub$Point[which(duplicated(dat.shrub %>% select(Point, SHSPP)))]
 #dat.shrub.dups <- dat.shrub %>% filter(Point %in% pntsWDups)
 #write.csv(dat.shrub.dups, "Shrub_dups.csv", row.names = F)
 # Correct errors (temporary) #
-dat.shrub$SHSPP[which(dat.shrub$Point == "CO-CPW-LP-016-09" &
-                  dat.shrub$SHSPP == "UD" &
-                  dat.shrub$SHABUND == 40)] <- "UC"
-dat.shrub$SHSPP[which(dat.shrub$Point == "CO-CPW-LP-031-11" &
-                        dat.shrub$SHSPP == "UC" &
-                        dat.shrub$SHABUND == 70)] <- "UD"
+# CO-CPW-LP-016-09 is entered correctly; the two records add up to the correct amount for UD
+# CO-CPW-LP-031-11 is entered correctly; the two records add up to the correct amount for UC
+# CO-CPW-LP-082-11 is entered correctly; the two records add up to the correct amount for UC
+# CO-CPW-SF-021-13 is entered correctly; the two records add up to the correct amount for UC
+# CO-CPW-SF-031-12 is entered correctly; the two records add up to the correct amount for UD
 dat.shrub$SHSPP[which(dat.shrub$Point == "CO-CPW-LP-041-03" &
                         dat.shrub$SHSPP == "UC" &
-                        dat.shrub$SHABUND == 99)] <- "UD"
-dat.shrub$SHSPP[which(dat.shrub$Point == "CO-CPW-LP-082-11" &
-                        dat.shrub$SHSPP == "UC" &
-                        dat.shrub$SHABUND == 99)] <- "UD"
-dat.shrub$SHSPP[which(dat.shrub$Point == "CO-CPW-SF-021-13" &
-                        dat.shrub$SHSPP == "UC" &
-                        dat.shrub$SHABUND == 80)] <- "UD"
-dat.shrub$SHSPP[which(dat.shrub$Point == "CO-CPW-SF-031-12" &
-                        dat.shrub$SHSPP == "UD" &
-                        dat.shrub$SHABUND == 30)] <- "UC"
+                        dat.shrub$SHABUND == 1)] <- "UD"
+
 #____________________________#
 #check <- dat.shrub %>%
 #  filter(SHSPP == "UD") %>%
@@ -158,8 +163,29 @@ dat.shrub$SHSPP[which(dat.shrub$Point == "CO-CPW-SF-031-12" &
 #check <- check %>% filter(Tot != 100)
 #write.csv(check, "ShrubAbund_TotNot100.csv", row.names = F)
 
+dat.shrub <- dat.shrub %>% 
+  filter(!SHSPP == "NULL") %>%
+  select(Point, shrub_cover) %>%
+  unique %>%
+  # Conifer cover #
+  left_join(dat.shrub %>%
+              filter(SHSPP == "UC") %>%
+              select(Point, SHABUND) %>%
+              rename(RCShrb_UC = SHABUND), by = "Point") %>%
+  # Deciduous cover #
+  left_join(dat.shrub %>%
+              filter(SHSPP == "UD") %>%
+              select(Point, SHABUND) %>%
+              rename(RCShrb_UD = SHABUND), by = "Point") %>%
+  mutate_at(vars(RCShrb_UC:RCShrb_UD), funs(replace(.,is.na(.),0))) %>%
+  mutate(RCShrb_TOT = RCShrb_UC + RCShrb_UD) %>%
+  mutate(RCShrb_UC = replace(RCShrb_UC, which(RCShrb_TOT != 100), NA),
+         RCShrb_UD = replace(RCShrb_UD, which(RCShrb_TOT != 100), NA)) %>%
+  select(-RCShrb_TOT)
 
+dat.final <- dat.final %>% left_join(dat.shrub, by = "Point")
 
+## Ground cover ##
 dat.gcov <- read.csv("CPW_veg_query_2_grndcov.csv", header=T, stringsAsFactors = F) %>%
   tbl_df %>% 
   mutate(Point = str_c(TransectNum, "-", str_pad(Point, width = 2, side = "left", pad = "0"))) %>%
