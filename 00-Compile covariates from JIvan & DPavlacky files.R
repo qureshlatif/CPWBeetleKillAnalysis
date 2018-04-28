@@ -36,6 +36,14 @@ dat.Ivan <- dat.Ivan %>%
 dat.DeadConif <- dat.Ivan %>% select(Point, DeadConifPct, DeadConifCover) %>%
   rename(DeadConif_RCov = DeadConifPct, DeadConif_Cov = DeadConifCover)
 
+# Get topography and YSO variables from earlier file #
+dat.Ivan2 <- read.csv("JIvan_files/Point_Level_Covariates.csv", header=T, stringsAsFactors = F) %>%
+  tbl_df %>%
+  mutate(Point = str_c("CO-CPW-", Label)) %>%
+  select(Point, TWIP, YSI)
+
+dat.DeadConif <- dat.DeadConif %>% left_join(dat.Ivan2, by = "Point")
+
 ### Compile covariates from D. Pavlacky ###
 
 ## Overstory ##
@@ -193,5 +201,14 @@ dat.gcov <- read.csv("CPW_veg_query_2_grndcov.csv", header=T, stringsAsFactors =
   select(Point, Year, DATE, PointVisitID, gc_woody:deepAndDown, gc_snow:primaryHabitat) %>%
   mutate(TOT = gc_woody + gc_herb + gc_grass + gc_live_grass +
            gc_bare_litter + deepAndDown + gc_snow + gc_water)
-dat.gcov %>% filter(TOT != 100 | is.na(TOT)) %>%
-  write.csv("GCov_TotNot100.csv", row.names = F)
+#dat.gcov %>% filter(TOT != 100 | is.na(TOT)) %>%
+#  write.csv("GCov_TotNot100.csv", row.names = F)
+
+dat.gcov <- dat.gcov %>% filter(TOT == 100 & !is.na(TOT)) %>%
+  mutate(HerbCov = gc_herb + gc_live_grass) %>%
+  select(Point, HerbCov)
+
+dat.final <- dat.final %>% left_join(dat.gcov, by = "Point")
+
+write.csv(dat.final, "Covariates.csv", row.names = F)
+
