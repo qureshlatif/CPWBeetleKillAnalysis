@@ -191,7 +191,7 @@ dat.shrub <- dat.shrub %>%
          RCShrb_UD = replace(RCShrb_UD, which(RCShrb_TOT != 100), NA)) %>%
   select(-RCShrb_TOT)
 
-dat.final <- dat.final %>% left_join(dat.shrub, by = "Point")
+dat.final <- dat.final %>% left_join(dat.shrub, by = "Point") %>% unique
 
 ## Ground cover ##
 dat.gcov <- read.csv("CPW_veg_query_2_grndcov.csv", header=T, stringsAsFactors = F) %>%

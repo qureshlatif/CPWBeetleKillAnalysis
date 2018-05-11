@@ -44,3 +44,29 @@ for(r in 1:length(rows)) {
 }
 
 write.csv(out, "Covariate_summary.csv", row.names = T)
+
+# Scatterplots - DeadConif VS YSO #
+library(cowplot)
+
+p.LP <- ggplot(data = dat.LP, aes(x = YSI, y = DeadConif_RCov)) +
+  geom_point(alpha = 0.2) +
+  xlab(NULL) + ylab(NULL) +
+  annotate("text", x = 5, y = 1.05, label = "Lodgpole pine stratum", size = 4)
+
+p.SF <- ggplot(data = (dat.SF %>% filter(DeadConif_RCov <= 1)), aes(x = YSI, y = DeadConif_RCov)) +
+  geom_point(alpha = 0.2) +
+  xlab(NULL) + ylab(NULL) +
+  annotate("text", x = 5, y = 1.05, label = "Spruce-fir stratum", size = 4)
+
+p <- ggdraw() + 
+  draw_plot(p.LP, x = 0.05, y = 0.05, width = 0.475, height = 0.95) +
+  draw_plot(p.SF, x = 0.525, y = 0.05, width = 0.475, height = 0.95) +
+  draw_plot_label(c("Proportion trees dead", "Years since outbreak"),
+                  x = c(0.03, 0.4),
+                  y = c(0.2, 0.03),
+                  size = c(15, 15),
+                  angle = c(90, 0),
+                  hjust = c(0, 0),
+                  vjust = c(0, 0))
+
+save_plot("figure_DeadConif_VS_YSO.tiff", p, ncol = 2, nrow = 1, dpi = 200)
