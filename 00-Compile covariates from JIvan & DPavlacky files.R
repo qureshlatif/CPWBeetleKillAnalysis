@@ -1,6 +1,6 @@
 require(dplyr)
 require(stringr)
-setwd("F:/research stuff/BCR/projects/CPW")
+setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 
 ### Get covariates from Jake Ivan's file ###
 dat.Ivan <- read.csv("JIvan_files/PCPointsWithConifData.csv", header=T, stringsAsFactors = F) %>%
@@ -40,7 +40,7 @@ dat.DeadConif <- dat.Ivan %>% select(Point, DeadConifPct, DeadConifCover) %>%
 dat.Ivan2 <- read.csv("JIvan_files/Point_Level_Covariates.csv", header=T, stringsAsFactors = F) %>%
   tbl_df %>%
   mutate(Point = str_c("CO-CPW-", Label)) %>%
-  select(Point, TWIP, YSI)
+  select(Point, TWIP, YSI, WILD)
 
 dat.DeadConif <- dat.DeadConif %>% left_join(dat.Ivan2, by = "Point")
 
@@ -199,14 +199,17 @@ dat.gcov <- read.csv("CPW_veg_query_2_grndcov.csv", header=T, stringsAsFactors =
   mutate(Point = str_c(TransectNum, "-", str_pad(Point, width = 2, side = "left", pad = "0"))) %>%
   unique %>%
   select(Point, Year, DATE, PointVisitID, gc_woody:deepAndDown, gc_snow:primaryHabitat) %>%
+  rename(gc_deadAndDown = deepAndDown) %>%
   mutate(TOT = gc_woody + gc_herb + gc_grass + gc_live_grass +
-           gc_bare_litter + deepAndDown + gc_snow + gc_water)
+           gc_bare_litter + gc_deadAndDown + gc_snow + gc_water)
 #dat.gcov %>% filter(TOT != 100 | is.na(TOT)) %>%
 #  write.csv("GCov_TotNot100.csv", row.names = F)
 
 dat.gcov <- dat.gcov %>% filter(TOT == 100 & !is.na(TOT)) %>%
-  mutate(HerbCov = gc_herb + gc_live_grass) %>%
-  select(Point, HerbCov)
+  mutate(gc_herb = gc_herb + gc_live_grass + gc_grass) %>%
+  # Versions of gc_herb that include versus exclude dead grass were highly correlated (r = 0.97).
+  # Keeping the one that includes dead to allow interpretation as a foraging resource or for cover.
+  select(Point, gc_herb, gc_woody, gc_deadAndDown, gc_bare_litter)
 
 dat.final <- dat.final %>% left_join(dat.gcov, by = "Point")
 
