@@ -5,9 +5,9 @@
         # add later # detection covariates: Time.b, DOY.b, ccov.b, shcov.b 
         # add later # point-level abundance covariates: PctDead.b, ...
       
-      # Prior on theta
-      theta.mn ~ dunif(0, 1000)
-      theta2 <- pow(theta.mn, 2)
+      # Prior on hazard rate parameters
+      a.mn ~ dunif(0, 500)
+      b.mn ~ dunif(0, 100)
 
       # Priors on psi and lambda
       beta0.mean ~ dnorm(0, 0.1)
@@ -26,7 +26,7 @@
         
         ## Detection parameters
         for(k in 1:nG) {
-          p[j, k] <- p0[k]
+          p[j, k] <- 1 - exp(-pow(((breaks[k] + breaks[k + 1]) / 2) / a.mn, -b.mn))
           pi[j, k] <- p[j, k] * area.prop[k]
           pic[j, k] <- pi[j, k] / pcap[j]
         }
@@ -38,12 +38,6 @@
         dclass[i, 1] ~ dcat(pic[dclass[i, 2], 1:nG])
       }
 
-      ### Detection intercept (pooled across sites within distance bins)
-      for(k in 1:nG) {
-        int[k] <- theta2 * (1 - exp(-pow(breaks[k + 1], 2)/(2 * theta2))) - theta2 * (1 - exp(-pow(breaks[k], 2)/(2 * theta2)))
-        p0[k] <- 2 * 3.141593 * int[k] / area.band[k]
-      }
-      
       ### Derived parameters
       N.mean <- sum(N[]) / nPoint
       p.mean <- sum(pcap) / nPoint

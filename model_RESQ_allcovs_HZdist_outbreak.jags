@@ -7,14 +7,15 @@
         # For point-level covariate imputation: PctDead.sd, PctDead.lower, TWIP.d, TWIP.sd,
         #    ccov.means, ccov.sd, shcov.means, shcov.sd, PctDead.b.missing, TWIP.b.missing, shcov.b.missing, ccov.b.missing
       
-      # Prior on theta
-      bt.0 ~ dnorm(0, 0.1)
-      bt.Time ~ dnorm(0, 0.1)
-      bt.Time2 ~ dnorm(0, 0.1)
-      bt.DOY ~ dnorm(0, 0.1)
-      bt.DOY2 ~ dnorm(0, 0.1)
-      bt.ccov ~ dnorm(0, 0.1)
-      bt.shcov ~ dnorm(0, 0.1)
+      # Prior on hazard rate parameters
+      a0 ~ dnorm(0, 0.1)
+      a.Time ~ dnorm(0, 0.1)
+      a.Time2 ~ dnorm(0, 0.1)
+      a.DOY ~ dnorm(0, 0.1)
+      a.DOY2 ~ dnorm(0, 0.1)
+      a.ccov ~ dnorm(0, 0.1)
+      a.shcov ~ dnorm(0, 0.1)
+      b ~ dunif(0, 100)
 
       # Priors on psi and lambda
       beta0.mean ~ dnorm(0, 0.1)
@@ -64,15 +65,12 @@
         #__________________________________________#
         
         ## Detection parameters
-        log(theta[j]) <- bt.0 + bt.Time*Time.b[j] + bt.Time2*pow(Time.b[j], 2) +  # Add detection covariates here.
-          bt.DOY*DOY.b[j] + bt.DOY2*pow(DOY.b[j], 2) +
-          bt.ccov*ccov.b[j]*(1-ccov.b.missing[j]) + bt.ccov*ccov.b.imp[j]*ccov.b.missing[j] +
-          bt.shcov*shcov.b[j]*(1-shcov.b.missing[j]) + bt.shcov*shcov.b.imp[j]*shcov.b.missing[j]
-        theta2[j] <- pow(theta[j], 2)
+        log(a[j]) <- a0 + a.Time*Time.b[j] + a.Time2*pow(Time.b[j], 2) +  # Add detection covariates here.
+          a.DOY*DOY.b[j] + a.DOY2*pow(DOY.b[j], 2) +
+          a.ccov*ccov.b[j]*(1-ccov.b.missing[j]) + a.ccov*ccov.b.imp[j]*ccov.b.missing[j] +
+          a.shcov*shcov.b[j]*(1-shcov.b.missing[j]) + a.shcov*shcov.b.imp[j]*shcov.b.missing[j]
         for(k in 1:nG) {
-          int[j, k] <- theta2[j] * (1 - exp(-pow(breaks[k + 1], 2)/(2 * theta2[j]))) -
-            theta2[j] * (1 - exp(-pow(breaks[k], 2)/(2 * theta2[j])))
-          p[j, k] <- 2 * 3.141593 * int[j, k] / area.band[k]
+          p[j, k] <- 1 - exp(-pow(((breaks[k] + breaks[k + 1]) / 2) / a[j], -b))
           pi[j, k] <- p[j, k] * area.prop[k]
           pic[j, k] <- pi[j, k] / pcap[j]
         }

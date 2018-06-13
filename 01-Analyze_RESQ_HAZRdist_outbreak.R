@@ -8,31 +8,34 @@ setwd("C:/Users/Quresh.Latif/files/projects/CPW/")
 load("Data_compiled_RESQ.RData")
 
 # Variables #
-stratum <- "SF" # Set stratum
+stratum <- "LP" # Set stratum
 
-model.file <- "CPWBeetleKillAnalysis/model_RESQ_allcovs_HNdist_outbreak.jags"
+model.file <- "model_RESQ_allcovs_HZdist_outbreak.jags"
 
 data <- list("Y", "dclass", "gridID", "nGrid", "nPoint", "nInd", "nG", "area.band", "area.prop", "breaks",
              "Time.b", "DOY.b", "ccov.b", "shcov.b", "PctDead.b", "YSO.b", "Outbrk.b", "TWIP.b",
              "PctDead.sd", "PctDead.lower", "TWIP.d", "TWIP.sd", "ccov.means", "ccov.sd", "shcov.means", "shcov.sd",
-             "PctDead.b.missing", "TWIP.b.missing", "shcov.b.missing", "ccov.b.missing") # Inputs for JAGS model.
+             "PctDead.b.missing", "TWIP.b.missing", "shcov.b.missing", "ccov.b.missing"
+             ) # Inputs for JAGS model.
 
-parameters <- c("beta0.mean", "beta0.sd", "beta0", "N", "N.mean", "p.mean", "bl.pdead", # Assemble the parameters vector for JAGS (What we want to track).
+parameters <- c("beta0.mean", "beta0.sd", "N.mean", "p.mean", # Assemble the parameters vector for JAGS (What we want to track).
+                "beta0", "N",
+                "bl.pdead",
                 "bl.pdead2", "bl.outbrk", "bl.YSO", "bl.YSO2", "bl.pdXYSO", "bl.TWIP",
-                "bt.0", "bt.Time", "bt.Time2", "bt.DOY", "bt.DOY2", "bt.ccov", "bt.shcov",
+                "a0", "a.Time", "a.Time2", "a.DOY", "a.DOY2", "a.ccov", "a.shcov", "b",
                 "lambda", "pcap", # Needed for WAIC
                 "test") # GOF
 
 inits <- function() # Setting these based on posterior distribution from an initial successful run.
-  list(N = Y, beta0.mean = rnorm(1, 1, 0.1), beta0.sd = rnorm(1, 0.66, 0.07), bt.0 = rnorm(1, 3.4, 0.03))
+  list(N = Y, beta0.mean = rnorm(1, 1, 0.1), beta0.sd = rnorm(1, 0.66, 0.07), a0 = rnorm(1, 3.5, 0.5), b = rnorm(1, 3.16, 0.5))
 
 # MCMC values.  Change to what works well for you.
 nc <- 3
 nb <- 5000
-ni <- 15000
+ni <- 10000
 nt <- 10
 
-save.out <- "mod_RESQ_allcovs_HNdist_SF"
+save.out <- "mod_RESQ_allcovs_HZdist_LP"
 #############
 
 # Detection data #
