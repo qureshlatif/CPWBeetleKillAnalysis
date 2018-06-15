@@ -7,33 +7,48 @@ library(dplyr)
 setwd("C:/Users/Quresh.Latif/files/projects/CPW/")
 load("Data_compiled_RESQ.RData")
 
-# Variables #
-stratum <- "SF" # Set stratum
-
-model.file <- "CPWBeetleKillAnalysis/model_RESQ_allcovs_HNdist_outbreak.jags"
+#____________________________________________________ Script inputs _____________________________________________________________#
+stratum <- "LP" # Set stratum (LP or SF)
+model.file <- "CPWBeetleKillAnalysis/model_RESQ_allNredpcovs_HNdist_outbreak_LP.jags"
 
 data <- list("Y", "dclass", "gridID", "nGrid", "nPoint", "nInd", "nG", "area.band", "area.prop", "breaks",
              "Time.b", "DOY.b", "ccov.b", "shcov.b", "PctDead.b", "YSO.b", "Outbrk.b", "TWIP.b",
-             "PctDead.sd", "PctDead.lower", "TWIP.d", "TWIP.sd", "ccov.means", "ccov.sd", "shcov.means", "shcov.sd",
-             "PctDead.b.missing", "TWIP.b.missing", "shcov.b.missing", "ccov.b.missing") # Inputs for JAGS model.
+             "PctDead.sd", "PctDead.lower", "TWIP.d", "TWIP.sd", "TWIP.b.missing",
+             "ccov.means", "ccov.sd", "ccov.b.missing",
+             #"shcov.means", "shcov.sd", "shcov.b.missing",
+             "PctDead.b.missing") # Inputs for JAGS model.
 
-parameters <- c("beta0.mean", "beta0.sd", "beta0", "N", "N.mean", "p.mean", "bl.pdead", # Assemble the parameters vector for JAGS (What we want to track).
+parameters <- c("beta0.mean", "beta0.sd", "N.mean", "p.mean", # Assemble the parameters vector for JAGS (What we want to track).
+                "beta0", "N",
+                "bl.pdead",
                 "bl.pdead2", "bl.outbrk", "bl.YSO", "bl.YSO2", "bl.pdXYSO", "bl.TWIP",
-                "bt.0", "bt.Time", "bt.Time2", "bt.DOY", "bt.DOY2", "bt.ccov", "bt.shcov",
+                ##___ Hazard rate parameters ___##
+                #"a0", "a.Time", #"a.Time2",
+                #"a.DOY", "a.DOY2",
+                #"a.ccov", #"a.shcov",
+                #"b",
+                ##______________________________##
+                ##___ Half-normal parameters ___##
+                "bt.0", "bt.Time", #"bt.Time2",
+                "bt.DOY", "bt.DOY2",
+                "bt.ccov", #"bt.shcov",
+                ##______________________________##
                 "lambda", "pcap", # Needed for WAIC
                 "test") # GOF
 
 inits <- function() # Setting these based on posterior distribution from an initial successful run.
-  list(N = Y, beta0.mean = rnorm(1, 1, 0.1), beta0.sd = rnorm(1, 0.66, 0.07), bt.0 = rnorm(1, 3.4, 0.03))
+  list(N = Y, beta0.mean = rnorm(1, 1, 0.1), beta0.sd = rnorm(1, 0.66, 0.07),
+       #a0 = rnorm(1, 3.5, 0.5), b = rnorm(1, 3.16, 0.5)) # for hazard rate model
+       bt.0 = rnorm(1, 3.4, 0.03)) # for half-normal model
 
-# MCMC values.  Change to what works well for you.
+# MCMC values.  Adjust as needed.
 nc <- 3
 nb <- 5000
-ni <- 15000
+ni <- 10000
 nt <- 10
 
-save.out <- "mod_RESQ_allcovs_HNdist_SF"
-#############
+save.out <- "mod_RESQ_allNredpcovsLP_HZdist_LP"
+#____________________________________________________________________________________________________________________________________#
 
 # Detection data #
 Y <- eval(as.name(str_c("Y.", stratum, ".dist")))
@@ -49,7 +64,6 @@ Cov <- eval(as.name(str_c("Cov.", stratum)))
 PctDead.b <- Cov[, "DeadConif"] # Point-level values
 PctDead.b[which(Cov[, "YSO"] > 12)] <- NA # Drop values from later years when (presumably) %Dead starts reflecting snag fall 
 PctDead.b <- PctDead.b %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Re-scale point values
-PctDead.d <- tapply(PctDead.b, gridID, mean, na.rm = T) # Grid-level values
 PctDead.b[which(is.na(PctDead.b) & is.na(Cov[, "YSO"]))] <- # Insert means for imputing PctDead outside ADS polygons
   mean(PctDead.b[which(!is.na(PctDead.b) & is.na(Cov[, "YSO"]))])
 PctDead.b[which(is.na(PctDead.b) & !is.na(Cov[, "YSO"]))] <- # Insert means for imputing PctDead inside ADS polygons
@@ -60,12 +74,9 @@ PctDead.lower <- min(PctDead.b, na.rm = T) # Lower bound for imputing missing va
 PctDead.b.missing <- is.na(PctDead.b) %>% as.integer # Index missing values to be imputed
 
 YSO.b <- Cov[, "YSO"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
-YSO.d <- tapply(YSO.b, gridID, mean, na.rm = T) # Grid-level values
 YSO.b[is.na(YSO.b)] <- 0
-YSO.d[is.na(YSO.d)] <- 0
 
 Outbrk.b <- Cov[, "YSO"] %>% (function(x) as.integer(!is.na(x)))
-Outbrk.d <- tapply(Outbrk.b, gridID, max)
 
 TWIP.b <- Cov[, "TWIP"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
 TWIP.d <- tapply(TWIP.b, gridID, mean, na.rm = T) # Grid-level values

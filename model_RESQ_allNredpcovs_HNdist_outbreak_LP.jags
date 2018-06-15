@@ -1,0 +1,94 @@
+    model{
+      
+      # Need to supply:
+        # Y, area.band, area.prop, breaks, dclass, nG, nInd, nPoint, gridID, nGrid
+        # detection covariates: Time.b, DOY.b, ccov.b, shcov.b 
+        # point-level abundance covariates: PctDead.b, YSO.b, Outbrk.b, TWIP.b
+        # For point-level covariate imputation: PctDead.sd, PctDead.lower, TWIP.d, TWIP.sd,
+        #    ccov.means, ccov.sd, shcov.means, shcov.sd, PctDead.b.missing, TWIP.b.missing, shcov.b.missing, ccov.b.missing
+      
+      # Prior on theta
+      bt.0 ~ dnorm(0, 0.1)
+      bt.Time ~ dnorm(0, 0.1)
+      bt.DOY ~ dnorm(0, 0.1)
+      bt.DOY2 ~ dnorm(0, 0.1)
+      bt.ccov ~ dnorm(0, 0.1)
+
+      # Priors on psi and lambda
+      beta0.mean ~ dnorm(0, 0.1)
+      beta0.sd ~ dunif(0, 10)
+      beta0.tau <- pow(beta0.sd, -2)
+      for(g in 1:nGrid) {
+        beta0[g] ~ dnorm(beta0.mean, beta0.tau)
+      }
+
+      bl.pdead ~ dnorm(0, 0.1)
+      bl.pdead2 ~ dnorm(0, 0.1)
+      bl.outbrk ~ dnorm(0, 0.1)
+      bl.YSO ~ dnorm(0, 0.1)
+      bl.YSO2 ~ dnorm(0, 0.1)
+      bl.pdXYSO ~ dnorm(0, 0.1)
+      bl.TWIP ~ dnorm(0, 0.1)
+
+      # Impute missing data
+      for(j in 1:nPoint) {
+        PctDead.b.imp[j] ~ dnorm(PctDead.b[j], pow(PctDead.sd[j], -2))T(PctDead.lower,)
+        TWIP.b.imp[j] ~ dnorm(TWIP.d[gridID[j]], pow(TWIP.sd[gridID[j]], -2))
+        ccov.b.imp[j] ~ dnorm(ccov.means[gridID[j]], pow(ccov.sd[gridID[j]], -2))
+      }
+
+      ### Point-level loop
+      for(j in 1:nPoint) {
+        ## Abundance model
+        log(lambda[j]) <- beta0[gridID[j]] + # Add point-level abundance covariates here
+          bl.pdead*PctDead.b[j]*(1-PctDead.b.missing[j]) + bl.pdead*PctDead.b.imp[j]*PctDead.b.missing[j] + 
+          bl.pdead2*pow(PctDead.b[j], 2)*(1-PctDead.b.missing[j]) +
+          bl.pdead2*pow(PctDead.b.imp[j], 2)*PctDead.b.missing[j] +
+          bl.outbrk*Outbrk.b[j] + bl.YSO*YSO.b[j] + bl.YSO2*pow(YSO.b[j], 2) +
+          bl.pdXYSO*PctDead.b[j]*YSO.b[j]*(1-PctDead.b.missing[j]) +
+          bl.pdXYSO*PctDead.b.imp[j]*YSO.b[j]*PctDead.b.missing[j] +
+          bl.TWIP*TWIP.b[j]*(1-TWIP.b.missing[j]) + bl.TWIP*TWIP.b.imp[j]*TWIP.b.missing[j]
+        N[j] ~ dpois(lambda[j])
+        Y[j] ~ dbin(pcap[j], N[j]) # Observation model
+        
+        #_______ For GOF based on deviance ________#
+        Y.new[j] ~ dbin(pcap[j], N[j]) # Simulate predicted data
+        
+        LLsim[j] <- logfact(N[j]) - logfact(Y.new[j]) + logfact(N[j] - Y.new[j]) + #log-likelihood for simulated data
+          log(pcap[j])*Y.new[j] + N[j]*log(1 - pcap[j]) - Y.new[j]*log(1 - pcap[j])
+        LL[j] <- logfact(N[j]) - logfact(Y[j]) + logfact(N[j] - Y[j]) + #log-likelihood for observed data
+          log(pcap[j])*Y[j] + N[j]*log(1 - pcap[j]) - Y[j]*log(1 - pcap[j])
+        #__________________________________________#
+        
+        ## Detection parameters
+        log(theta[j]) <- bt.0 + bt.Time*Time.b[j] + bt.DOY*DOY.b[j] + bt.DOY2*pow(DOY.b[j], 2) + # Add detection covariates here.
+          bt.ccov*ccov.b[j]*(1-ccov.b.missing[j]) + bt.ccov*ccov.b.imp[j]*ccov.b.missing[j]
+        theta2[j] <- pow(theta[j], 2)
+        for(k in 1:nG) {
+          int[j, k] <- theta2[j] * (1 - exp(-pow(breaks[k + 1], 2)/(2 * theta2[j]))) -
+            theta2[j] * (1 - exp(-pow(breaks[k], 2)/(2 * theta2[j])))
+          p[j, k] <- 2 * 3.141593 * int[j, k] / area.band[k]
+          pi[j, k] <- p[j, k] * area.prop[k]
+          pic[j, k] <- pi[j, k] / pcap[j]
+        }
+        pcap[j] <- sum(pi[j, ])
+      }
+      
+      ### Multi-nomial portion of detection model (Loop over detected individuals)
+      for(i in 1:nInd) { # multi-nomial portion of detection model
+        dclass[i, 1] ~ dcat(pic[dclass[i, 2], 1:nG])
+      }
+
+      ### Derived parameters
+      N.mean <- sum(N[1:nPoint]) / nPoint
+      p.mean <- sum(pcap[1:nPoint]) / nPoint
+
+      #_______ Bayesian GOF based on deviance ________#
+      #deviance
+      dev_sim <- (-2)*sum(LLsim[])
+      dev_data <- (-2)*sum(LL[])
+
+      #test statistics should be ~0.5 if model fits
+      test <- step(dev_data-dev_sim)
+      #_______________________________________________#
+    }

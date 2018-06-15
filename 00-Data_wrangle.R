@@ -2,11 +2,12 @@ library(stringr)
 library(BCRDataAPI)
 library(dplyr)
 
-setwd("/home/RMBO.LOCAL/quresh.latif/CPW_beetle")
+#setwd("/home/RMBO.LOCAL/quresh.latif/CFLRP")
+setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 
 ################## Inputs ####################
 # Get latest AOU checklist with tax names and order #
-aou.checklist <- read.csv("/home/RMBO.LOCAL/quresh.latif/NACC_list_bird_species_downloaded_20180319.csv",
+aou.checklist <- read.csv("C:/Users/Quresh.Latif/files/data/NACC_list_bird_species_downloaded_20180319.csv",
                           header = T, stringsAsFactors = F) %>% tbl_df %>%
   mutate(tax_ord = row_number())
 
@@ -128,6 +129,7 @@ BCRDataAPI::filter_on('Migrant = 0')
 BCRDataAPI::filter_on('TimePeriod > -1')
 BCRDataAPI::filter_on('radialDistance < 125')
 grab <- BCRDataAPI::get_data()
+grab <- grab %>% SubSppToSpp
 
 point.coords <- grab %>%
   select(TransectNum, Point, easting, northing, zone) %>%
@@ -180,11 +182,11 @@ spp.out <- spp.out %>% # replace NAs with zeros
   mutate_at(vars(Detections_LP, Detections_SF, sumCount_LP, sumCount_SF),
             (function(x) replace(x, is.na(x), 0)))
 
-spp.out <- spp.out %>% # compile ratio of count totals to number of detections for spp with > 30 detections #
+spp.out <- spp.out %>% # compile ratio of count totals to number of detections for spp with > 60 detections #
   mutate(RatioCountToDet_LP = sumCount_LP / Detections_LP) %>%
-  mutate(RatioCountToDet_LP = replace(RatioCountToDet_LP, which(Detections_LP < 30), NA)) %>%
+  mutate(RatioCountToDet_LP = replace(RatioCountToDet_LP, which(Detections_LP < 60), NA)) %>%
   mutate(RatioCountToDet_SF = sumCount_SF / Detections_SF) %>%
-  mutate(RatioCountToDet_SF = replace(RatioCountToDet_SF, which(Detections_SF < 30), NA))
+  mutate(RatioCountToDet_SF = replace(RatioCountToDet_SF, which(Detections_SF < 60), NA))
 
 maxDetPossible <- str_sub(point.list, 8, 9) %>% tapply(., ., length) # max possible by stratum
 names(spp.out)[which(names(spp.out) == "Detections_LP")] <-
@@ -250,8 +252,11 @@ cov_tab_import <- read.csv("Covariates.csv", header = T, stringsAsFactors = F) %
   mutate(YSI = replace(YSI, which(YSI == -1), NA)) %>%
   rename(DeadConif = DeadConif_RCov) %>%
   rename(YSO = YSI) %>%
+  rename(HerbCov = gc_herb) %>%
+  rename(WoodyCov = gc_woody) %>%
+  rename(DDCov = gc_deadAndDown) %>%
   select(Point, TWIP, DeadConif, YSO, CanCov, RCOV_AS, RCOV_ES, RCOV_Pine, shrub_cover,
-         RCShrb_UD, HerbCov)
+         RCShrb_UD, HerbCov, WoodyCov, DDCov)
 
 ## Compile multidimensional detection data array ##
 spp.list <- spp.out$BirdCode
@@ -327,8 +332,9 @@ Cov.SF[ind.vals, -c(1:3)] <- cov_tab_import %>%
   arrange(Point) %>%
   select(-Point) %>%
   as.matrix
+Cov.SF[which(Cov.SF[, "DeadConif"] == 1.25), "DeadConif"] <- 1 # correct DeadConif > 1
 
-rm(ind.vals, obs, maxDetPossible, sp, tvec)
+rm(ind.vals, obs, maxDetPossible, sp, tvec, smry)
 save.image("Data_compiled.RData")
 
 ## Correlation matrices ##

@@ -2,7 +2,8 @@ library(BCRDataAPI)
 library(timeDate)
 
 #setwd("/home/RMBO.LOCAL/quresh.latif/CPW_beetle")
-setwd("/home/RMBO.LOCAL/rstudio03")
+#setwd("/home/RMBO.LOCAL/rstudio03")
+setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 
 #### Variables ####
 trunc.pct <- 0.95
@@ -78,8 +79,11 @@ cov_tab_import <- read.csv("Covariates.csv", header = T, stringsAsFactors = F) %
   mutate(YSI = replace(YSI, which(YSI == -1), NA)) %>%
   rename(DeadConif = DeadConif_RCov) %>%
   rename(YSO = YSI) %>%
+  rename(HerbCov = gc_herb) %>%
+  rename(WoodyCov = gc_woody) %>%
+  rename(DDCov = gc_deadAndDown) %>%
   select(Point, TWIP, DeadConif, YSO, CanCov, RCOV_AS, RCOV_ES, RCOV_Pine, shrub_cover,
-         RCShrb_UD, HerbCov)
+         RCShrb_UD, HerbCov, WoodyCov, DDCov)
 
 ## Compile detection data ##
 cov.names <- c("gridIndex", "DayOfYear", "Time", names(cov_tab_import)[-1])
@@ -172,6 +176,7 @@ Cov.SF[ind.vals, -c(1:3)] <- cov_tab_import %>%
   arrange(Point) %>%
   select(-Point) %>%
   as.matrix
+Cov.SF[which(Cov.SF[, "DeadConif"] == 1.25), "DeadConif"] <- 1 # correct DeadConif > 1
 
 rm(ind.vals, obs, k, y, i)
 save.image("Data_compiled_RESQ.RData")

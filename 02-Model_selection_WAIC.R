@@ -8,7 +8,7 @@ library(R.utils)
 setwd("C:/Users/Quresh.Latif/files/projects/CPW/")
 load("Data_compiled_RESQ.RData")
 
-## LP ##
+## Lodgepole pine stratum ##
 Y <- Y.LP.dist
 nsites <- length(Y)
 
@@ -49,7 +49,7 @@ out <- out %>% select(WAIC, dWAIC, DIC, dDIC)
 
 write.csv(out, "Model_selection_RESQ_LP.csv", row.names = T)
 
-## LP ##
+## Spruce fir stratum ##
 Y <- Y.SF.dist
 nsites <- length(Y)
 
