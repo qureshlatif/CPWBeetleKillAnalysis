@@ -2,10 +2,11 @@ library(jagsUI)
 library(stringr)
 library(dplyr)
 
-setwd("/home/RMBO.LOCAL/quresh.latif/CPW_beetle")
+#setwd("/home/RMBO.LOCAL/quresh.latif/CPW_beetle")
+setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 load("Data_compiled.RData")
 
-#### Script variables ####
+#### Script inputs ####
 stratum <- "LP"
 model.file <- "model_outbreak_2ndOrderAtPnt.jags"
 

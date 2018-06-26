@@ -1,5 +1,7 @@
 library(BCRDataAPI)
 library(timeDate)
+library(stringr)
+library(dplyr)
 
 #setwd("/home/RMBO.LOCAL/quresh.latif/CPW_beetle")
 #setwd("/home/RMBO.LOCAL/rstudio03")
@@ -111,10 +113,13 @@ dclass.LP <- dclass.LP %>%
   select(-CL_Count) %>%
   as.matrix()
 
-Y.LP.trem <- matrix(0, nrow = length(point.list.LP), max(grab.proc$TimePeriod, na.rm = T),
+Y.LP.trem.all <- Y.LP.trem <- matrix(0, nrow = length(point.list.LP), max(grab.proc$TimePeriod, na.rm = T),
                     dimnames = list(point.list.LP, NULL)) # Time removal N-mixture observation matrix
 for(k in 1:max(grab.proc$TimePeriod, na.rm = T)) {
   obs <- grab.proc %>% filter(TimePeriod == k & str_sub(Stratum, -2, -1) == "LP")
+  y <- tapply(obs$CL_Count, obs$Point, sum, na.rm = T)
+  Y.LP.trem.all[names(y), k] <- y
+  obs <- grab.proc %>% filter(TimePeriod == k & str_sub(Stratum, -2, -1) == "LP" & radialDistance <= 30)
   y <- tapply(obs$CL_Count, obs$Point, sum, na.rm = T)
   Y.LP.trem[names(y), k] <- y
 }
@@ -154,10 +159,13 @@ dclass.SF <- dclass.SF %>%
   select(-CL_Count) %>%
   as.matrix()
 
-Y.SF.trem <- matrix(0, nrow = length(point.list.SF), max(grab.proc$TimePeriod, na.rm = T),
+Y.SF.trem.all <- Y.SF.trem <- matrix(0, nrow = length(point.list.SF), max(grab.proc$TimePeriod, na.rm = T),
                     dimnames = list(point.list.SF, NULL)) # Time removal N-mixture observation matrix
 for(k in 1:max(grab.proc$TimePeriod, na.rm = T)) {
   obs <- grab.proc %>% filter(TimePeriod == k & str_sub(Stratum, -2, -1) == "SF")
+  y <- tapply(obs$CL_Count, obs$Point, sum, na.rm = T)
+  Y.SF.trem.all[names(y), k] <- y
+  obs <- grab.proc %>% filter(TimePeriod == k & str_sub(Stratum, -2, -1) == "SF", radialDistance <= 30)
   y <- tapply(obs$CL_Count, obs$Point, sum, na.rm = T)
   Y.SF.trem[names(y), k] <- y
 }

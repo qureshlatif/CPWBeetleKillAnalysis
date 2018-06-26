@@ -1,0 +1,89 @@
+    model{
+      
+      # Need to supply:
+        # Y, area.band, area.prop, breaks, dclass, nG, nInd, nPoint, gridID, nGrid
+        # detection covariates: Time.b, DOY.b, ccov.b, shcov.b 
+        # point-level abundance covariates: PctDead.b, YSO.b, Outbrk.b, TWIP.b
+        # For point-level covariate imputation: PctDead.sd, PctDead.lower, TWIP.d, TWIP.sd,
+        #    ccov.means, ccov.sd, shcov.means, shcov.sd, PctDead.b.missing, TWIP.b.missing, shcov.b.missing, ccov.b.missing
+      
+      # Prior on hazard rate parameters
+      a0 ~ dnorm(0, 0.1)
+      a.Time ~ dnorm(0, 0.1)
+      a.DOY ~ dnorm(0, 0.1)
+      a.DOY2 ~ dnorm(0, 0.1)
+      a.ccov ~ dnorm(0, 0.1)
+      b ~ dunif(0, 100)
+
+      # Priors on psi and lambda
+      beta0.mean ~ dnorm(0, 0.1)
+      beta0.sd ~ dunif(0, 10)
+      beta0.tau <- pow(beta0.sd, -2)
+      for(g in 1:nGrid) {
+        beta0[g] ~ dnorm(beta0.mean, beta0.tau)
+      }
+
+      bl.pdead ~ dnorm(0, 0.1)
+      bl.YSO ~ dnorm(0, 0.1)
+      bl.pdXYSO ~ dnorm(0, 0.1)
+      bl.NdropXYSO ~ dnorm(0, 0.1)
+      bl.TWIP ~ dnorm(0, 0.1)
+
+      # Impute missing data
+      for(j in 1:nPoint) {
+        PctDead.b.imp[j] ~ dnorm(PctDead.b[j], pow(PctDead.sd[j], -2))T(PctDead.lower,)
+        TWIP.b.imp[j] ~ dnorm(TWIP.d[gridID[j]], pow(TWIP.sd[gridID[j]], -2))
+        ccov.b.imp[j] ~ dnorm(ccov.means[gridID[j]], pow(ccov.sd[gridID[j]], -2))
+      }
+
+      ### Point-level loop
+      for(j in 1:nPoint) {
+        ## Abundance model
+        log(lambda[j]) <- beta0[gridID[j]] + # Add point-level abundance covariates here
+          bl.pdead*PctDead.b[j]*(1-PctDead.b.missing[j]) + bl.pdead*PctDead.b.imp[j]*PctDead.b.missing[j] + 
+          bl.YSO*YSO.b[j] +
+          bl.pdXYSO*PctDead.b[j]*YSO.b[j]*(1-PctDead.b.missing[j]) +
+          bl.pdXYSO*PctDead.b.imp[j]*YSO.b[j]*PctDead.b.missing[j] +
+          bl.NdropXYSO*Ndrop.b[j]*YSO.b[j] +
+          bl.TWIP*TWIP.b[j]*(1-TWIP.b.missing[j]) + bl.TWIP*TWIP.b.imp[j]*TWIP.b.missing[j]
+        N[j] ~ dpois(lambda[j])
+        Y[j] ~ dbin(pcap[j], N[j]) # Observation model
+        
+        #_______ For GOF based on deviance ________#
+        Y.new[j] ~ dbin(pcap[j], N[j]) # Simulate predicted data
+        
+        LLsim[j] <- logfact(N[j]) - logfact(Y.new[j]) + logfact(N[j] - Y.new[j]) + #log-likelihood for simulated data
+          log(pcap[j])*Y.new[j] + N[j]*log(1 - pcap[j]) - Y.new[j]*log(1 - pcap[j])
+        LL[j] <- logfact(N[j]) - logfact(Y[j]) + logfact(N[j] - Y[j]) + #log-likelihood for observed data
+          log(pcap[j])*Y[j] + N[j]*log(1 - pcap[j]) - Y[j]*log(1 - pcap[j])
+        #__________________________________________#
+        
+        ## Detection parameters
+        log(a[j]) <- a0 + a.Time*Time.b[j] + a.DOY*DOY.b[j] + a.DOY2*pow(DOY.b[j], 2) + # Add detection covariates here.
+          a.ccov*ccov.b[j]*(1-ccov.b.missing[j]) + a.ccov*ccov.b.imp[j]*ccov.b.missing[j]
+        for(k in 1:nG) {
+          p[j, k] <- 1 - exp(-pow(((breaks[k] + breaks[k + 1]) / 2) / a[j], -b))
+          pi[j, k] <- p[j, k] * area.prop[k]
+          pic[j, k] <- pi[j, k] / pcap[j]
+        }
+        pcap[j] <- sum(pi[j, ])
+      }
+      
+      ### Multi-nomial portion of detection model (Loop over detected individuals)
+      for(i in 1:nInd) { # multi-nomial portion of detection model
+        dclass[i, 1] ~ dcat(pic[dclass[i, 2], 1:nG])
+      }
+
+      ### Derived parameters
+      N.mean <- sum(N[1:nPoint]) / nPoint
+      p.mean <- sum(pcap[1:nPoint]) / nPoint
+
+      #_______ Bayesian GOF based on deviance ________#
+      #deviance
+      dev_sim <- (-2)*sum(LLsim[])
+      dev_data <- (-2)*sum(LL[])
+
+      #test statistics should be ~0.5 if model fits
+      test <- step(dev_data-dev_sim)
+      #_______________________________________________#
+    }

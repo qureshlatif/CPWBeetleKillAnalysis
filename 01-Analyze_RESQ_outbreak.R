@@ -9,37 +9,45 @@ load("Data_compiled_RESQ.RData")
 
 #____________________________________________________ Script inputs _____________________________________________________________#
 stratum <- "LP" # Set stratum (LP or SF)
-model.file <- "CPWBeetleKillAnalysis/model_RESQ_allNredpcovs_HNdist_outbreak_LP.jags"
+#model.file <- "CPWBeetleKillAnalysis/model_RESQ_outbreak_HZp(red_LP)_N(Pdead_pDeadXYSO_NdropXYSO).jags"
+model.file <- "CPWBeetleKillAnalysis/model_RESQ_allcovs_TR_outbreak.jags"
 
-data <- list("Y", "dclass", "gridID", "nGrid", "nPoint", "nInd", "nG", "area.band", "area.prop", "breaks",
-             "Time.b", "DOY.b", "ccov.b", "shcov.b", "PctDead.b", "YSO.b", "Outbrk.b", "TWIP.b",
-             "PctDead.sd", "PctDead.lower", "TWIP.d", "TWIP.sd", "TWIP.b.missing",
+data <- list("Y",
+             #"dclass", # needed for distance sampling
+             "gridID", "nGrid", "nPoint",
+             "nInt",
+             #"nInd", "nG", "area.band", "area.prop", "breaks", # needed for distance sampling
+             "Time.b", "DOY.b", "ccov.b", "shcov.b", "PctDead.b", "YSO.b",
+             #"Ndrop.b",
+             "Outbrk.b",
+             "PctDead.sd", "PctDead.lower",
+             "TWIP.b", "TWIP.d", "TWIP.sd", "TWIP.b.missing",
              "ccov.means", "ccov.sd", "ccov.b.missing",
-             #"shcov.means", "shcov.sd", "shcov.b.missing",
+             "shcov.means", "shcov.sd", "shcov.b.missing",
              "PctDead.b.missing") # Inputs for JAGS model.
 
 parameters <- c("beta0.mean", "beta0.sd", "N.mean", "p.mean", # Assemble the parameters vector for JAGS (What we want to track).
                 "beta0", "N",
                 "bl.pdead",
-                "bl.pdead2", "bl.outbrk", "bl.YSO", "bl.YSO2", "bl.pdXYSO", "bl.TWIP",
+                "bl.pdead2",
+                "bl.outbrk", "bl.YSO",
+                "bl.YSO2",
+                "bl.pdXYSO",
+                #"bl.NdropXYSO",
+                "bl.TWIP",
                 ##___ Hazard rate parameters ___##
                 #"a0", "a.Time", #"a.Time2",
                 #"a.DOY", "a.DOY2",
                 #"a.ccov", #"a.shcov",
                 #"b",
                 ##______________________________##
-                ##___ Half-normal parameters ___##
-                "bt.0", "bt.Time", #"bt.Time2",
+                ##___ Half-normal parameters or time removal ___##
+                "bt.0", "bt.Time", "bt.Time2",
                 "bt.DOY", "bt.DOY2",
-                "bt.ccov", #"bt.shcov",
+                "bt.ccov", "bt.shcov",
                 ##______________________________##
                 "lambda", "pcap", # Needed for WAIC
                 "test") # GOF
-
-inits <- function() # Setting these based on posterior distribution from an initial successful run.
-  list(N = Y, beta0.mean = rnorm(1, 1, 0.1), beta0.sd = rnorm(1, 0.66, 0.07),
-       #a0 = rnorm(1, 3.5, 0.5), b = rnorm(1, 3.16, 0.5)) # for hazard rate model
-       bt.0 = rnorm(1, 3.4, 0.03)) # for half-normal model
 
 # MCMC values.  Adjust as needed.
 nc <- 3
@@ -47,19 +55,33 @@ nb <- 5000
 ni <- 10000
 nt <- 10
 
-save.out <- "mod_RESQ_allNredpcovsLP_HZdist_LP"
+save.out <- "mod_RESQ_allcovs_TR_LP_trunc30m"
+
+## For distance sampling ##
+#Y <- eval(as.name(str_c("Y.", stratum, ".dist"))) # For distance sampling
+#dclass <- eval(as.name(str_c("dclass.", stratum)))
+#dimnames(dclass) <- NULL
+#nInd <- nrow(dclass)
+#nPoint <- length(Y)
+#inits <- function() # Setting these based on posterior distribution from an initial successful run.
+#  list(N = Y, beta0.mean = rnorm(1, 1, 0.1), beta0.sd = rnorm(1, 0.66, 0.07),
+       #a0 = rnorm(1, 3.5, 0.5), b = rnorm(1, 3.16, 0.5)) # for hazard rate model
+       #bt.0 = rnorm(1, 3.4, 0.03)) # for half-normal model
+
+## For time removal ##
+Y <- eval(as.name(str_c("Y.", stratum, ".trem"))) # For time removal
+nInt <- dim(Y)[2]
+nPoint <- dim(Y)[1]
+inits <- function() # Setting these based on posterior distribution from an initial successful run.
+  list(N = apply(Y, 1, sum), beta0.mean = rnorm(1, 1, 0.1), beta0.sd = rnorm(1, 0.66, 0.07),
+       bt.0 = rnorm(1, 0, 1)) # for time removal model
 #____________________________________________________________________________________________________________________________________#
 
 # Detection data #
-Y <- eval(as.name(str_c("Y.", stratum, ".dist")))
-dclass <- eval(as.name(str_c("dclass.", stratum)))
-dimnames(dclass) <- NULL
 gridID <- eval(as.name(str_c("Cov.", stratum)))[, "gridIndex"]
 nGrid <- max(gridID)
-nPoint <- length(Y)
-nInd <- nrow(dclass)
 
-# Covariates (save for later) #
+# Covariates #
 Cov <- eval(as.name(str_c("Cov.", stratum)))
 PctDead.b <- Cov[, "DeadConif"] # Point-level values
 PctDead.b[which(Cov[, "YSO"] > 12)] <- NA # Drop values from later years when (presumably) %Dead starts reflecting snag fall 
@@ -77,6 +99,8 @@ YSO.b <- Cov[, "YSO"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = 
 YSO.b[is.na(YSO.b)] <- 0
 
 Outbrk.b <- Cov[, "YSO"] %>% (function(x) as.integer(!is.na(x)))
+
+Ndrop.b <- (Cov[, "YSO"] %>% (function(x) replace(x >= 3, which(is.na(x)), F) %>% as.integer))
 
 TWIP.b <- Cov[, "TWIP"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
 TWIP.d <- tapply(TWIP.b, gridID, mean, na.rm = T) # Grid-level values

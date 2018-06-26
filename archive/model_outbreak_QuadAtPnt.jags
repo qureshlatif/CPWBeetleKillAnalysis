@@ -1,0 +1,145 @@
+model {
+  
+  # prior distributions
+  
+  # parameter correlation
+  
+  rho.ab ~ dunif(-1,1)
+  rho.bd ~ dunif(-1,1)
+  
+  # mean and precison for the parameter intercepts
+  
+  t.nu <- 7.763179      # Uniform prior
+  t.sigma <- 1.566267   # Uniform prior
+
+  alpha0 ~  dt(0, pow(t.sigma, -2), t.nu)
+  tvar.sigma.a0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.a0 <- abs(tvar.sigma.a0)  # half-Cauchy distribution
+  
+  beta0 ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.sigma.b0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.b0 <- abs(tvar.sigma.b0)  # half-Cauchy distribution
+  
+  delta0 ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.sigma.d0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.d0 <- abs(tvar.sigma.d0)  # half-Cauchy distribution
+  
+  # metacommunity parameter
+  omega ~ dunif(0,1)
+  
+  # covariates for psi (d)
+  Betad.PctDead ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.PctDead ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.PctDead <- abs(tvar.Betad.PctDead) # half-Cauchy distribution
+
+  Betad.Outbrk ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.Outbrk ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.Outbrk <- abs(tvar.Betad.Outbrk) # half-Cauchy distribution
+  
+  Betad.YSO ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.YSO ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.YSO <- abs(tvar.Betad.YSO) # half-Cauchy distribution
+
+  Betad.TWIP ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.TWIP ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.TWIP <- abs(tvar.Betad.TWIP) # half-Cauchy distribution
+  
+  # covariates for theta (b)
+  Betab.PctDead ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.PctDead ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.PctDead <- abs(tvar.Betab.PctDead) # half-Cauchy distribution
+  
+  Betab.PctDead2 ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.PctDead2 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.PctDead2 <- abs(tvar.Betab.PctDead2) # half-Cauchy distribution
+  
+  Betab.Outbrk ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.Outbrk ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.Outbrk <- abs(tvar.Betab.Outbrk) # half-Cauchy distribution
+  
+  Betab.YSO ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.YSO ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.YSO <- abs(tvar.Betab.YSO) # half-Cauchy distribution
+  
+  Betab.YSO2 ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.YSO2 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.YSO2 <- abs(tvar.Betab.YSO2) # half-Cauchy distribution
+
+  Betab.TWIP ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.TWIP ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.TWIP <- abs(tvar.Betab.TWIP) # half-Cauchy distribution
+  
+  # covariates for p (a)
+  Betaa.Time ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betaa.Time ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betaa.Time <- abs(tvar.Betaa.Time) # half-Cauchy distribution
+
+  Betaa.DOY ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betaa.DOY ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betaa.DOY <- abs(tvar.Betaa.DOY) # half-Cauchy distribution
+
+  Betaa.CCov ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betaa.CCov ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betaa.CCov <- abs(tvar.Betaa.CCov) # half-Cauchy distribution
+
+  Betaa.SHCov ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betaa.SHCov ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betaa.SHCov <- abs(tvar.Betaa.SHCov) # half-Cauchy distribution
+
+  # Impute missing data
+  for(j in 1:n.point) {
+    PctDead.b.imp[j] ~ dnorm(PctDead.b[j], pow(PctDead.sd[j], -2))T(PctDead.lower,)
+    TWIP.b.imp[j] ~ dnorm(TWIP.d[gridID[j]], pow(TWIP.sd[gridID[j]], -2))
+    ccov.b.imp[j] ~ dnorm(ccov.means[gridID[j]], pow(ccov.sd[gridID[j]], -2))
+    shcov.b.imp[j] ~ dnorm(shcov.means[gridID[j]], pow(shcov.sd[gridID[j]], -2))
+  }
+  
+  for (i in 1:n.spp) {
+    d0[i] ~ dnorm(delta0, pow(sigma.d0,-2))
+    b0[i] ~ dnorm(beta0 + (rho.bd*sigma.b0/sigma.d0)*(d0[i] - delta0),  pow(sigma.b0,-2)/(1 - pow(rho.bd,2)))
+    a0[i] ~ dnorm(alpha0 + (rho.ab*sigma.a0/sigma.b0)*(b0[i] - beta0),  pow(sigma.a0,-2)/(1 - pow(rho.ab,2)))
+
+    # covariates for psi (d)
+    bd.pdead[i] ~ dnorm(Betad.PctDead, pow(sigma.Betad.PctDead, -2))
+    bd.outbrk[i] ~ dnorm(Betad.Outbrk, pow(sigma.Betad.Outbrk, -2))
+    bd.YSO[i] ~ dnorm(Betad.YSO, pow(sigma.Betad.YSO, -2))
+    bd.TWIP[i] ~ dnorm(Betad.TWIP, pow(sigma.Betad.TWIP, -2))
+
+    # covariates for theta (b)
+    bb.pdead[i] ~ dnorm(Betab.PctDead, pow(sigma.Betab.PctDead, -2))
+    bb.pdead2[i] ~ dnorm(Betab.PctDead2, pow(sigma.Betab.PctDead2, -2))
+    bb.outbrk[i] ~ dnorm(Betab.Outbrk, pow(sigma.Betab.Outbrk, -2))
+    bb.YSO[i] ~ dnorm(Betab.YSO, pow(sigma.Betab.YSO, -2))
+    bb.YSO2[i] ~ dnorm(Betab.YSO2, pow(sigma.Betab.YSO2, -2))
+    bb.TWIP[i] ~ dnorm(Betab.TWIP, pow(sigma.Betab.TWIP, -2))
+
+    # covariates for p (a)
+    ba.Time[i] ~ dnorm(Betaa.Time, pow(sigma.Betaa.Time, -2))
+    ba.DOY[i] ~ dnorm(Betaa.DOY, pow(sigma.Betaa.DOY, -2))
+    ba.ccov[i] ~ dnorm(Betaa.CCov, pow(sigma.Betaa.CCov, -2))
+    ba.shcov[i] ~ dnorm(Betaa.SHCov, pow(sigma.Betaa.SHCov, -2))
+
+    # state processes
+    w[i] ~ dbern(omega)
+    for (k in 1:n.grid) {
+      logit(psi[k, i]) <- d0[i] + bd.pdead[i]*PctDead.d[k] + 
+        bd.outbrk[i]*Outbrk.d[k] + bd.YSO[i]*YSO.d[k] + bd.TWIP[i]*TWIP.d[k]
+      z[k, i] ~ dbern(psi[k, i]*w[i])
+    }
+
+    for(j in 1:n.point) {
+      logit(theta[j, i]) <- b0[i] +
+        bb.pdead[i]*PctDead.b[j]*(1-PctDead.b.missing[j]) + bb.pdead[i]*PctDead.b.imp[j]*PctDead.b.missing[j] + 
+        bb.pdead2[i]*pow(PctDead.b[j], 2)*(1-PctDead.b.missing[j]) +
+        bb.pdead2[i]*pow(PctDead.b.imp[j], 2)*PctDead.b.missing[j] +
+        bb.outbrk[i]*Outbrk.b[j] + bb.YSO[i]*YSO.b[j] + bb.YSO2[i]*pow(YSO.b[j], 2) +
+        bb.TWIP[i]*TWIP.b[j]*(1-TWIP.b.missing[j]) + bb.TWIP[i]*TWIP.b.imp[j]*TWIP.b.missing[j]
+      u[j, i] ~ dbern(theta[j, i]*z[gridID[j], i])
+      
+      logit(p[j, i]) <- a0[i] + ba.Time[i]*Time.b[j] + ba.DOY[i]*DOY.b[j] + 
+        ba.ccov[i]*ccov.b[j]*(1-ccov.b.missing[j]) + ba.ccov[i]*ccov.b.imp[j]*ccov.b.missing[j] +
+        ba.shcov[i]*shcov.b[j]*(1-shcov.b.missing[j]) + ba.shcov[i]*shcov.b.imp[j]*shcov.b.missing[j]
+      Y[j, i] ~ dbinom(p[j, i]*u[j, i], TPeriod[j, i])
+    }
+  }
+}

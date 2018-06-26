@@ -11,33 +11,24 @@ setwd("C:/Users/Quresh.Latif/files/projects/CPW/")
 load("Data_compiled_RESQ.RData")
 
 #___ Inputs ___#
-stratum <- "LP" # LP or SF for lodgepole or spruce-fire, respectively
-det.model <- "HN" # Either HN for half-normal or HZ for hazard rate
+mod <- loadObject("mod_RESQ_HZp(red_SF)_N(Pdead_pDeadXYSO_NdropXYSO)")
+pars <- c("beta0.mean", "beta0.sd", "bl.pdead", "bl.pdead2", "bl.outbrk", # Parameters of interest
+          "bl.YSO", "bl.YSO2", "bl.pdXYSO", "bl.NdropXYSO",
+          "bl.TWIP", "a0", "b", "a.Time", "a.Time2", "a.DOY", "a.DOY2",
+          "a.ccov", "a.shcov", "bt.0", "bt.Time", "bt.Time2", "bt.DOY",
+          "bt.DOY2", "bt.ccov", "bt.shcov")
+tab.out <- "Param_summ_RESQ.csv"
 #______________#
-
-mod <- loadObject(str_c("mod_RESQ_allcovs_", det.model, "dist_", stratum))
 
 # Parameter summary table #
 sum.table <- mod$summary %>% tbl_df %>%
-  mutate(parameter = dimnames(mod$summary)[[1]])
-if(det.model == "HZ")
-  sum.table <- sum.table %>%
-  filter(parameter %in% c("beta0.mean", "beta0.sd", "bl.pdead", "bl.pdead2",
-                          "bl.outbrk", "bl.YSO", "bl.YSO2", "bl.pdXYSO", "bl.TWIP",
-                          "a0", "b", "a.Time", "a.Time2", "a.DOY", "a.DOY2",
-                          "a.ccov", "a.shcov"))
-if(det.model == "HN")
-  sum.table <- sum.table %>%
-  filter(parameter %in% c("beta0.mean", "beta0.sd", "bl.pdead", "bl.pdead2",
-                          "bl.outbrk", "bl.YSO", "bl.YSO2", "bl.pdXYSO", "bl.TWIP",
-                          "bt.0", "bt.Time", "bt.Time2", "bt.DOY", "bt.DOY2",
-                          "bt.ccov", "bt.shcov"))
-sum.table <- sum.table %>%
+  mutate(parameter = dimnames(mod$summary)[[1]]) %>%
+  filter(parameter %in% pars) %>%
   mutate(estimate = str_c(round(`50%`, digits = 3), "(", round(`2.5%`, digits = 3), ",", round(`97.5%`, digits = 3), ")")) %>%
   select(parameter, estimate, Rhat, n.eff, overlap0, f) %>%
   mutate(n.eff = n.eff %>% as.integer)
 
-write.csv(sum.table, str_c("Param_summ_RESQ_allcovs_", det.model,"dist", stratum, ".csv"), row.names = F)
+write.csv(sum.table, tab.out, row.names = F)
 
 # Plot outbreak relationships #
 Cov <- eval(as.name(str_c("Cov.", stratum)))
