@@ -26,7 +26,7 @@ data <- list("Y",
              "shcov.means", "shcov.sd", "shcov.b.missing",
              "PctDead.b.missing") # Inputs for JAGS model.
 
-parameters <- c("beta0.mean", "beta0.sd", "N.mean", "p.mean", # Assemble the parameters vector for JAGS (What we want to track).
+parameters <- c("beta0.mean", "beta0.sd", #"N.mean", "p.mean", # Assemble the parameters vector for JAGS (What we want to track).
                 "beta0", "N",
                 "bl.pdead",
                 "bl.pdead2",
@@ -42,11 +42,12 @@ parameters <- c("beta0.mean", "beta0.sd", "N.mean", "p.mean", # Assemble the par
                 #"b",
                 ##______________________________##
                 ##___ Half-normal parameters or time removal ___##
+                "bt.Int", # Time removal only - linear effect of minutes elapsed
                 "bt.0", "bt.Time", "bt.Time2",
                 "bt.DOY", "bt.DOY2",
                 "bt.ccov", "bt.shcov",
                 ##______________________________##
-                "lambda", "pcap", # Needed for WAIC
+                "lambda", "p", # Needed for WAIC
                 "test") # GOF
 
 # MCMC values.  Adjust as needed.
@@ -55,7 +56,7 @@ nb <- 5000
 ni <- 10000
 nt <- 10
 
-save.out <- "mod_RESQ_allcovs_TR_LP_trunc30m"
+save.out <- "mod_RESQ_allcovs_TR_LP"
 
 ## For distance sampling ##
 #Y <- eval(as.name(str_c("Y.", stratum, ".dist"))) # For distance sampling
@@ -69,11 +70,11 @@ save.out <- "mod_RESQ_allcovs_TR_LP_trunc30m"
        #bt.0 = rnorm(1, 3.4, 0.03)) # for half-normal model
 
 ## For time removal ##
-Y <- eval(as.name(str_c("Y.", stratum, ".trem"))) # For time removal
+Y <- eval(as.name(str_c("Y.", stratum, ".trem.all"))) # For time removal
 nInt <- dim(Y)[2]
 nPoint <- dim(Y)[1]
 inits <- function() # Setting these based on posterior distribution from an initial successful run.
-  list(N = apply(Y, 1, sum), beta0.mean = rnorm(1, 1, 0.1), beta0.sd = rnorm(1, 0.66, 0.07),
+  list(N = apply(Y, 1, sum), n = apply(Y, 1, sum), beta0.mean = rnorm(1, 1, 0.1), beta0.sd = rnorm(1, 0.66, 0.07),
        bt.0 = rnorm(1, 0, 1)) # for time removal model
 #____________________________________________________________________________________________________________________________________#
 
@@ -134,6 +135,9 @@ shcov.sd <- tapply(shcov.b, gridID, sd, na.rm = T) # Grid-level SDs for imputing
 shcov.b.missing <- is.na(shcov.b) %>% as.integer # Index missing values to be imputed
 shcov.b[is.na(shcov.b)] <- 0
 
+# Save workspace for model checking #
+save.image("RESQ_GOF_workspace.RData")
+
 st.time <- Sys.time()
 out <- jagsUI(data, inits, parameters.to.save = parameters, model.file, n.thin=nt, n.chains=nc,
               n.burnin=nb, n.iter=ni, parallel=TRUE)
@@ -142,7 +146,7 @@ run.time <- end.time - st.time
 run.time
 rm(st.time,end.time)
 
-max(out$summary[,"Rhat"])
+max(out$summary[which(!is.na(out$summary[ ,"Rhat"])) ,"Rhat"])
 
 min(out$summary[,"n.eff"])
 #sort(out$summary[,"n.eff"])[1:200]

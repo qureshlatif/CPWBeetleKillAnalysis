@@ -1,17 +1,17 @@
 require(dplyr)
 require(stringr)
 setwd("C:/Users/Quresh.Latif/files/projects/CPW")
+load("Data_compiled.RData")
 
-dat <- read.csv("Covariates.csv", header = T, stringsAsFactors = F) %>%
-  tbl_df() %>%
-  mutate(Stratum = Point %>% str_sub(1, 9)) %>%
-  mutate(YSI = YSI %>% replace(which(YSI == -1), NA)) %>%
+dat <- cov_tab_import %>%
+  rename(YSI = YSO) %>%
+  rename(RoadDens = Rd_dens1km) %>%
+  mutate(Stratum = str_sub(Point, 1, 9)) %>%
   filter(!is.na(TWIP)) # The two grids dropped here were in burned areas.
 
 dat.LP <- dat %>% filter(Stratum == "CO-CPW-LP") %>%
   mutate(Transect = Point %>% str_sub(8, 13)) %>%
-  select(Point, Transect, TWIP, CanCov, DeadConif_RCov,
-         YSI, WILD, RCOV_ES:gc_bare_litter, primaryHabitat)
+  select(Point, Transect, DeadConif:RoadDens, TWIP)
 
 # Exploration of relative canopy covers #
 #rcov.tot <- (dat.LP %>% mutate(TOT = RCOV_ES + RCOV_SU + RCOV_Pine + RCOV_AS))$TOT
@@ -33,8 +33,7 @@ dat.LP <- dat %>% filter(Stratum == "CO-CPW-LP") %>%
 
 dat.SF <- dat %>% filter(Stratum == "CO-CPW-SF") %>%
   mutate(Transect = Point %>% str_sub(8, 13)) %>%
-  select(Point, Transect, TWIP, CanCov, DeadConif_RCov,
-         YSI, WILD, RCOV_ES:gc_bare_litter, primaryHabitat)
+  select(Point, Transect, DeadConif:RoadDens, TWIP)
 
 # Exploration  of relative canopy covers #
 #rcov.tot <- (dat.SF %>% mutate(TOT = RCOV_ES + RCOV_SU + RCOV_Pine + RCOV_AS))$TOT
@@ -54,13 +53,13 @@ dat.SF <- dat %>% filter(Stratum == "CO-CPW-SF") %>%
 #dat.SF$DeadConif_RCov[which(dat.SF$WILD == 0)] %>% mean(na.rm = T) # 14%
 #dat.SF$DeadConif_RCov[which(dat.SF$WILD == 0)] %>% sd(na.rm = T)
 
-rows <- c("DeadConif_RCov", "DeadConif_SD", "YSI", "CanCov", "CanCov_SD", "RCOV_AS", "RCOV_ES", "RCOV_Pine", "shrub_cover", 
-          "RCShrb_UC", "gc_herb", "gc_woody", "gc_deadAndDown", "RoadDens", "TWIP", "WILD")
+rows <- c("DeadConif", "DeadConif_SD", "YSI", "CanCov", "CanCov_SD", "RCOV_AS", "RCOV_ES", "RCOV_Pine", "shrub_cover", 
+          "RCShrb_UC", "HerbCov", "WoodyCov", "DDCov", "RoadDens", "TWIP", "WILD")
 cols <- c("LP", "ntr.LP", "npt.LP", "SF", "ntr.SF", "npt.SF")
 out <- matrix("", nrow = length(rows), ncol  = length(cols),
               dimnames = list(rows, cols))
 
-for(r in which(!rows %in% c("DeadConif_SD", "CanCov_SD", "RoadDens", "WILD"))) {
+for(r in which(!rows %in% c("DeadConif_SD", "CanCov_SD", "WILD"))) {
   vec <- dat.LP[, rows[r]] %>% as.matrix %>% as.numeric
   out[rows[r], "LP"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
     str_c(" (", vec %>% sd(na.rm = T) %>% round(digits = 2), ", ",
@@ -82,7 +81,7 @@ for(r in which(!rows %in% c("DeadConif_SD", "CanCov_SD", "RoadDens", "WILD"))) {
 # Grid-level Heterogeneity #
 vec <- (dat.LP %>%
     group_by(Transect) %>%
-    summarise(DeadConif = sd(DeadConif_RCov, na.rm = T)))$DeadConif
+    summarise(DeadConif = sd(DeadConif, na.rm = T)))$DeadConif
 out["DeadConif_SD", "LP"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
   str_c(" (", vec %>% sd(na.rm = T) %>% round(digits = 2), ", ",
         vec %>% min(na.rm = T) %>% round(digits = 2), "-",
@@ -92,7 +91,7 @@ out["DeadConif_SD", "npt.LP"] <- NA
 
 vec <- (dat.SF %>%
           group_by(Transect) %>%
-          summarise(DeadConif = sd(DeadConif_RCov, na.rm = T)))$DeadConif
+          summarise(DeadConif = sd(DeadConif, na.rm = T)))$DeadConif
 out["DeadConif_SD", "SF"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
   str_c(" (", vec %>% sd(na.rm = T) %>% round(digits = 2), ", ",
         vec %>% min(na.rm = T) %>% round(digits = 2), "-",

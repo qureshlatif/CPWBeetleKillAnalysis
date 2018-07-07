@@ -52,8 +52,19 @@
           bl.pdXYSO*PctDead.b.imp[j]*YSO.b[j]*PctDead.b.missing[j] +
           bl.TWIP*TWIP.b[j]*(1-TWIP.b.missing[j]) + bl.TWIP*TWIP.b.imp[j]*TWIP.b.missing[j]
         N[j] ~ dpois(lambda[j])
-        Y[j, 1:nInt] ~ dmulti(pic[j, 1:nInt], N[j]) # Observation model
+        n[j] ~ dbin(pcap[j], N[j])
+        Y[j, 1:nInt] ~ dmulti(pic[j, 1:nInt], n[j]) # Observation model
         
+        #_______ For GOF based on deviance ________#
+        n.new[j] ~ dbin(pcap[j], N[j])
+        Y.new[j, 1:nInt] ~ dmulti(pic[j, 1:nInt], n.new[j]) # Simulate predicted data
+        
+        LLsim[j] <- logfact(N[j]) - logfact(n.new[j]) + logfact(N[j] - n.new[j]) + #log-likelihood for simulated data
+          log(pcap[j])*n.new[j] + n.new[j]*log(1 - pcap[j]) - n.new[j]*log(1 - pcap[j])
+        LL[j] <- logfact(N[j]) - logfact(n[j]) + logfact(N[j] - n[j]) + #log-likelihood for observed data
+          log(pcap[j])*n[j] + N[j]*log(1 - pcap[j]) - n[j]*log(1 - pcap[j])
+        #__________________________________________#
+
         ## Detection parameters
         logit(p[j]) <- bt.0 + bt.Time*Time.b[j] + bt.Time2*pow(Time.b[j], 2) +  # Add detection covariates here.
           bt.DOY*DOY.b[j] + bt.DOY2*pow(DOY.b[j], 2) +
@@ -69,4 +80,13 @@
       ### Derived parameters
       N.mean <- sum(N[1:nPoint]) / nPoint
       p.mean <- sum(pcap[1:nPoint]) / nPoint
+      
+      #_______ Bayesian GOF based on deviance ________#
+      #deviance
+      dev_sim <- (-2)*sum(LLsim[])
+      dev_data <- (-2)*sum(LL[])
+
+      #test statistics should be ~0.5 if model fits
+      test <- step(dev_data-dev_sim)
+      #_______________________________________________#
       }

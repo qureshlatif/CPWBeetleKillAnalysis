@@ -83,6 +83,10 @@ spp.out <- spp.out %>%
   select(tax_ord, BirdCode, common_name, species) %>%
   arrange(tax_ord)
 
+# Dump species outside of BNA breeding range #
+spp.out <- spp.out %>%
+  filter(!BirdCode %in% c("RUHU", "CAHU", "BCRF", "TOWA"))
+
 spp.excluded <- grab %>%
   filter(Year %in% 2008:2017) %>%
   filter(primaryHabitat %in% c("LP", "SF", "II")) %>% #II?
@@ -121,6 +125,7 @@ BCRDataAPI::add_columns(c('TransectNum|str',
 BCRDataAPI::filter_on(str_c('BCR = ', BCR))
 BCRDataAPI::filter_on(str_c('Stratum in ', str_c(strata, collapse = ",")))
 BCRDataAPI::filter_on(str_c('SelectionMethod in ', str_c(SampDesign, collapse = ",")))
+BCRDataAPI::filter_on(str_c('BirdCode in ', str_c(spp.out$BirdCode, collapse = ",")))
 BCRDataAPI::filter_on('ninetynine = 0')
 BCRDataAPI::filter_on('eightyeight = 0')
 BCRDataAPI::filter_on('How <> F')
@@ -128,12 +133,13 @@ BCRDataAPI::filter_on('Sex <> J')
 BCRDataAPI::filter_on('Migrant = 0')
 BCRDataAPI::filter_on('TimePeriod > -1')
 BCRDataAPI::filter_on('radialDistance < 125')
-grab <- BCRDataAPI::get_data()
+grab <- BCRDataAPI::get_data(interpolate_effort = T)
 grab <- grab %>% SubSppToSpp
 
 point.coords <- grab %>%
   select(TransectNum, Point, easting, northing, zone) %>%
   unique
+point.coords %>% write.csv("Point_coords.csv", row.names = F)
 point.list <- unique(str_c(point.coords$TransectNum,
                            str_pad(point.coords$Point, width = 2, side = "left", pad = "0"), sep = "-")) %>%
   sort
@@ -256,7 +262,12 @@ cov_tab_import <- read.csv("Covariates.csv", header = T, stringsAsFactors = F) %
   rename(WoodyCov = gc_woody) %>%
   rename(DDCov = gc_deadAndDown) %>%
   select(Point, TWIP, DeadConif, YSO, CanCov, RCOV_AS, RCOV_ES, RCOV_Pine, shrub_cover,
-         RCShrb_UD, HerbCov, WoodyCov, DDCov)
+         RCShrb_UC, HerbCov, WoodyCov, DDCov, WILD)
+
+cov_tab_import <- cov_tab_import %>%
+  left_join(foreign::read.dbf("C:/Users/Quresh.Latif/files/GIS/CPW/Point_coords.dbf", as.is = T) %>%
+               mutate(Point = str_c(TransectNu, "-", str_pad(Point, width = 2, side = "left", pad = "0"))) %>%
+               select(Point, Rd_dens1km), by = "Point")
 
 ## Compile multidimensional detection data array ##
 spp.list <- spp.out$BirdCode
@@ -334,13 +345,13 @@ Cov.SF[ind.vals, -c(1:3)] <- cov_tab_import %>%
   as.matrix
 Cov.SF[which(Cov.SF[, "DeadConif"] == 1.25), "DeadConif"] <- 1 # correct DeadConif > 1
 
-rm(ind.vals, obs, maxDetPossible, sp, tvec, smry)
+rm(ind.vals, obs, maxDetPossible, sp, tvec)
 save.image("Data_compiled.RData")
 
 ## Correlation matrices ##
-Cov.LP[, c("TWIP", "DeadConif", "CanCov", "RCOV_AS", "RCOV_ES", "RCOV_Pine",
-           "shrub_cover", "RCShrb_UD", "HerbCov")] %>% cor(use = "complete")
+Cov.LP[, c("TWIP", "WILD", "Rd_dens1km", "DeadConif", "CanCov", "RCOV_AS", "RCOV_ES", "RCOV_Pine",
+           "shrub_cover", "RCShrb_UD", "HerbCov")] %>% cor(use = "complete") %>% round(digits = 3)
 #plot(Cov.LP[, "RCOV_Pine"], Cov.LP[, "RCOV_AS"]) #Drop RCOV_ES from LP strata analysis.
 
-Cov.SF[, c("TWIP", "DeadConif", "CanCov", "RCOV_AS", "RCOV_ES", "RCOV_Pine",
-           "shrub_cover", "RCShrb_UD", "HerbCov")] %>% cor(use = "complete")
+Cov.SF[, c("TWIP", "WILD", "Rd_dens1km", "DeadConif", "CanCov", "RCOV_AS", "RCOV_ES", "RCOV_Pine",
+           "shrub_cover", "RCShrb_UD", "HerbCov")] %>% cor(use = "complete") %>% round(digits = 3)
