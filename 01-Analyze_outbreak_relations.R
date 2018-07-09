@@ -8,13 +8,14 @@ load("Data_compiled.RData")
 
 #### Script inputs ####
 stratum <- "LP"
-model.file <- "model_outbreak_2ndOrderAtPnt.jags"
+maxYSOForPD <- 12 # Set to 12 for LP and 9 for SF
+model.file <- "CPWBeetleKillAnalysis/model_outbreak_2ndOrdYSOAtPnt.jags"
 
 # Data objects to send to JAGS
 data <- list("Y", "TPeriod", "gridID", "n.grid", "n.point", "n.spp", "PctDead.b",
              "PctDead.d", "PctDead.sd", "PctDead.lower", "PctDead.b.missing",
              "YSO.b", "YSO.d", "Outbrk.b", "Outbrk.d",
-             "TWIP.b", "TWIP.d", "TWIP.sd", "TWIP.b.missing",
+             "TWIP.d", "RDens.d", "WILD.d",
              "DOY.b", "Time.b",
              "ccov.b", "ccov.means", "ccov.sd", "ccov.b.missing",
              "shcov.b", "shcov.means", "shcov.sd", "shcov.b.missing")
@@ -24,36 +25,39 @@ parameters <- c("omega", "rho.ab", "rho.bd",
                 "alpha0", "sigma.a0", "beta0", "sigma.b0", "delta0", "sigma.d0",
                 
                 "Betad.PctDead", "sigma.Betad.PctDead", "Betad.Outbrk", "sigma.Betad.Outbrk", "Betad.YSO", "sigma.Betad.YSO",
-                "Betad.TWIP", "sigma.Betad.TWIP",
-                "Betab.PctDead", "sigma.Betab.PctDead", "Betab.PctDead2", "sigma.Betab.PctDead2", "Betab.Outbrk", "sigma.Betab.Outbrk",
+                "Betad.TWIP", "sigma.Betad.TWIP", "Betad.RDens", "sigma.Betad.RDens", "Betad.WILD", "sigma.Betad.WILD",
+                "Betab.PctDead", "sigma.Betab.PctDead", "Betab.Outbrk", "sigma.Betab.Outbrk",
                 "Betab.YSO", "sigma.Betab.YSO", "Betab.YSO2", "sigma.Betab.YSO2", "Betab.PctDdXYSO", "sigma.Betab.PctDdXYSO",
-                "Betab.TWIP", "sigma.Betab.TWIP",
-                "Betaa.Time", "sigma.Betaa.Time", "Betaa.DOY", "sigma.Betaa.DOY", "Betaa.CCov", "sigma.Betaa.CCov",
+                "Betaa.Time", "sigma.Betaa.Time", "Betaa.Time2", "sigma.Betaa.Time2",
+                "Betaa.DOY", "sigma.Betaa.DOY", "Betaa.DOY2", "sigma.Betaa.DOY2",
+                "Betaa.CCov", "sigma.Betaa.CCov",
                 "Betaa.SHCov", "sigma.Betaa.SHCov",
                 
                 "d0", "b0", "a0",
-                "bd.pdead", "bd.outbrk", "bd.YSO", "bd.TWIP",
-                "bb.pdead", "bb.outbrk", "bb.YSO", "bb.TWIP",
-                "ba.Time", "ba.DOY", "ba.ccov", "ba.shcov")
+                "bd.pdead", "bd.outbrk", "bd.YSO", "bd.TWIP", "bd.RDens", "bd.WILD",
+                "bb.pdead", "bb.outbrk", "bb.YSO", "bb.YSO2", "bb.pdXYSO",
+                "ba.Time", "ba.Time2", "ba.DOY", "ba.DOY2", "ba.ccov", "ba.shcov")
 
 # Function for setting initial values in JAGS
 inits <- function()
   list(z=z.init, u=u.init, w=w.init, tvar.sigma.a0 = rnorm(1), tvar.sigma.b0 = rnorm(1), tvar.sigma.d0 = rnorm(1),
-       tvar.Betad.PctDead = rnorm(1), tvar.Betad.Outbrk = rnorm(1), tvar.Betad.YSO = rnorm(1), tvar.Betad.TWIP = rnorm(1),
-       tvar.Betab.PctDead = rnorm(1), tvar.Betab.PctDead2 = rnorm(1), tvar.Betab.Outbrk = rnorm(1), tvar.Betab.YSO = rnorm(1),
-       tvar.Betab.YSO2 = rnorm(1), tvar.Betab.PctDdXYSO = rnorm(1), tvar.Betab.TWIP = rnorm(1), tvar.Betaa.Time = rnorm(1),
-       tvar.Betaa.DOY = rnorm(1), tvar.Betaa.CCov = rnorm(1), tvar.Betaa.SHCov = rnorm(1))
+       tvar.Betad.PctDead = rnorm(1), tvar.Betad.Outbrk = rnorm(1), tvar.Betad.YSO = rnorm(1),
+       tvar.Betad.TWIP = rnorm(1), tvar.Betad.RDens = rnorm(1), tvar.Betad.WILD = rnorm(1),
+       tvar.Betab.PctDead = rnorm(1), tvar.Betab.Outbrk = rnorm(1), tvar.Betab.YSO = rnorm(1),
+       tvar.Betab.YSO2 = rnorm(1), tvar.Betab.PctDdXYSO = rnorm(1),
+       tvar.Betaa.Time = rnorm(1), tvar.Betaa.Time2 = rnorm(1),
+       tvar.Betaa.DOY = rnorm(1), tvar.Betaa.DOY2 = rnorm(1),
+       tvar.Betaa.CCov = rnorm(1), tvar.Betaa.SHCov = rnorm(1))
 
 # MCMC values
 nc <- 3 # number of chains
-nb <- 1000 # burn in
-ni <- 15000 # number of iterations
-nt <- 10 # thinning
+nb <- 5 #1000 # burn in
+ni <- 10 #15000 # number of iterations
+nt <- 1 #10 # thinning
 
-save.out <- "mod_LPcommunity_no2ndorder"
+save.out <- "mod_LPcommunity_2ndorderAtPnt"
 ##########################
 
-## Lodgepole pine stratum ##
 # Detection data #
 Y <- str_c("Y.", stratum) %>% as.name %>% eval
 TPeriod <- str_c("T.", stratum) %>% as.name %>% eval
@@ -65,7 +69,7 @@ n.spp <- dim(Y)[2]
 
 # Covariates #
 PctDead.b <- Cov[, "DeadConif"] # Point-level values
-PctDead.b[which(Cov[, "YSO"] > 12)] <- NA # Drop values from later years when (presumably) %Dead starts reflecting snag fall 
+PctDead.b[which(Cov[, "YSO"] > maxYSOForPD)] <- NA # Drop values from later years when (presumably) %Dead starts reflecting snag fall 
 PctDead.b <- PctDead.b %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Re-scale point values
 PctDead.d <- tapply(PctDead.b, gridID, mean, na.rm = T) # Grid-level values
 PctDead.b[which(is.na(PctDead.b) & is.na(Cov[, "YSO"]))] <- # Insert means for imputing PctDead outside ADS polygons
@@ -85,11 +89,17 @@ YSO.d[is.na(YSO.d)] <- 0
 Outbrk.b <- Cov[, "YSO"] %>% (function(x) as.integer(!is.na(x)))
 Outbrk.d <- tapply(Outbrk.b, gridID, max)
 
-TWIP.b <- Cov[, "TWIP"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
-TWIP.d <- tapply(TWIP.b, gridID, mean, na.rm = T) # Grid-level values
-TWIP.sd <- tapply(TWIP.b, gridID, sd, na.rm = T) # Grid-specific SDs for imputing missing values
-TWIP.b.missing <- is.na(TWIP.b) %>% as.integer # Index missing values to be imputed
-TWIP.b[is.na(TWIP.b)] <- 0
+#TWIP.b <- Cov[, "TWIP"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
+TWIP.d <- Cov[, "TWIP"]  %>% # Grid-level values only
+  tapply(gridID, mean) %>%
+  (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T))
+
+RDens.d <- Cov[, "Rd_dens1km"]  %>% # Grid-level values only
+  tapply(gridID, mean) %>%
+  (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T))
+
+WILD.d <- Cov[, "WILD"]  %>% # Grid-level values only
+  tapply(gridID, function(x) (mean(x) >= 0.5)*1)
 
 DOY.b <- Cov[, "DayOfYear"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
 

@@ -162,25 +162,25 @@ grid.list <- unique(point.coords$TransectNum) %>% sort
 ## Add number of detections and count summaries to spp.out by stratum ##
 smry <- grab %>% filter(Stratum == "CO-CPW-LP") %>%
   select(BirdCode, TransectNum, Point) %>% unique %>%
-  group_by(BirdCode) %>% count() %>%
+  dplyr::group_by(BirdCode) %>% count() %>%
   rename(Detections_LP = n)
 spp.out <- spp.out %>% left_join(smry, by = "BirdCode")
 
 smry <- grab %>% filter(Stratum == "CO-CPW-SF") %>%
   select(BirdCode, TransectNum, Point) %>% unique %>%
-  group_by(BirdCode) %>% count() %>%
+  dplyr::group_by(BirdCode) %>% count() %>%
   rename(Detections_SF = n)
 spp.out <- spp.out %>% left_join(smry, by = "BirdCode")
 
 smry <- grab %>% filter(Stratum == "CO-CPW-LP") %>%
   select(BirdCode, TransectNum, Point, CL_count) %>%
-  group_by(BirdCode) %>%
+  dplyr::group_by(BirdCode) %>%
   summarise(sumCount_LP = sum(CL_count))
 spp.out <- spp.out %>% left_join(smry, by = "BirdCode")
 
 smry <- grab %>% filter(Stratum == "CO-CPW-SF") %>%
   select(BirdCode, TransectNum, Point, CL_count) %>%
-  group_by(BirdCode) %>%
+  dplyr::group_by(BirdCode) %>%
   summarise(sumCount_SF = sum(CL_count))
 spp.out <- spp.out %>% left_join(smry, by = "BirdCode")
 
@@ -206,25 +206,25 @@ rm(smry)
 ## Add number of detections and count summaries to excluded species by stratum ##
 smry <- grab %>% filter(Stratum == "CO-CPW-LP") %>%
   select(BirdCode, TransectNum, Point) %>% unique %>%
-  group_by(BirdCode) %>% count() %>%
+  dplyr::group_by(BirdCode) %>% count() %>%
   rename(Detections_LP = n)
 spp.excluded <- spp.excluded %>% left_join(smry, by = "BirdCode")
 
 smry <- grab %>% filter(Stratum == "CO-CPW-SF") %>%
   select(BirdCode, TransectNum, Point) %>% unique %>%
-  group_by(BirdCode) %>% count() %>%
+  dplyr::group_by(BirdCode) %>% count() %>%
   rename(Detections_SF = n)
 spp.excluded <- spp.excluded %>% left_join(smry, by = "BirdCode")
 
 smry <- grab %>% filter(Stratum == "CO-CPW-LP") %>%
   select(BirdCode, TransectNum, Point, CL_count) %>%
-  group_by(BirdCode) %>%
+  dplyr::group_by(BirdCode) %>%
   summarise(sumCount_LP = sum(CL_count))
 spp.excluded <- spp.excluded %>% left_join(smry, by = "BirdCode")
 
 smry <- grab %>% filter(Stratum == "CO-CPW-SF") %>%
   select(BirdCode, TransectNum, Point, CL_count) %>%
-  group_by(BirdCode) %>%
+  dplyr::group_by(BirdCode) %>%
   summarise(sumCount_SF = sum(CL_count))
 spp.excluded <- spp.excluded %>% left_join(smry, by = "BirdCode")
 
@@ -262,12 +262,17 @@ cov_tab_import <- read.csv("Covariates.csv", header = T, stringsAsFactors = F) %
   rename(WoodyCov = gc_woody) %>%
   rename(DDCov = gc_deadAndDown) %>%
   select(Point, TWIP, DeadConif, YSO, CanCov, RCOV_AS, RCOV_ES, RCOV_Pine, shrub_cover,
-         RCShrb_UC, HerbCov, WoodyCov, DDCov, WILD)
+         RCShrb_UC, HerbCov, WoodyCov, DDCov, WILD) %>%
+  filter(!is.na(TWIP))
 
 cov_tab_import <- cov_tab_import %>%
   left_join(foreign::read.dbf("C:/Users/Quresh.Latif/files/GIS/CPW/Point_coords.dbf", as.is = T) %>%
                mutate(Point = str_c(TransectNu, "-", str_pad(Point, width = 2, side = "left", pad = "0"))) %>%
                select(Point, Rd_dens1km), by = "Point")
+
+## Trim point and grid lists to those with covariate values ##
+point.list <- point.list[which(point.list %in% cov_tab_import$Point)]
+grid.list <- grid.list[which(grid.list %in% str_sub(point.list, 1, 13))]
 
 ## Compile multidimensional detection data array ##
 spp.list <- spp.out$BirdCode
@@ -284,7 +289,8 @@ Y.LP <- matrix(NA, nrow = length(point.list.LP), ncol = length(spp.list),
 T.LP <- matrix(6, nrow = length(point.list.LP), ncol = length(spp.list),
                dimnames = list(point.list.LP, spp.list))
 for(sp in 1:length(spp.list)) {
-  obs <- grab %>% filter(BirdCode == spp.list[sp] & str_sub(Point, 1, 2) == "LP")
+  obs <- grab %>% filter(BirdCode == spp.list[sp] & str_sub(Point, 1, 2) == "LP" &
+                           Point %in% point.list.LP)
   if(nrow(obs) > 0) {
     Y.LP[, sp] <- (point.list.LP %in% obs$Point) %>% as.integer
     tvec <- tapply(obs$TimePeriod, obs$Point, min)
@@ -298,9 +304,11 @@ for(sp in 1:length(spp.list)) {
 Cov.LP <- matrix(NA, nrow = length(point.list.LP), ncol = length(cov.names),
                  dimnames = list(point.list.LP, cov.names))
 Cov.LP[, "gridIndex"] <- point.list.LP %>% str_sub(1, -4) %>% as.factor %>% as.integer
-Cov.LP[, "DayOfYear"] <- (grab %>% filter(Stratum == "CO-CPW-LP") %>%
+Cov.LP[, "DayOfYear"] <- (grab %>% filter(Stratum == "CO-CPW-LP" &
+                                            Point %in% point.list.LP) %>%
                             select(Point, DOY) %>% unique %>% arrange(Point))$DOY
-Cov.LP[, "Time"] <- (grab %>% filter(Stratum == "CO-CPW-LP") %>%
+Cov.LP[, "Time"] <- (grab %>% filter(Stratum == "CO-CPW-LP" &
+                                       Point %in% point.list.LP) %>%
                             select(Point, Time_min) %>% unique %>% arrange(Point))$Time_min
 ind.vals <- which(point.list.LP %in% (cov_tab_import$Point %>% str_sub(8, -1)))
 Cov.LP[ind.vals, -c(1:3)] <- cov_tab_import %>%
@@ -318,7 +326,8 @@ Y.SF <- matrix(NA, nrow = length(point.list.SF), ncol = length(spp.list),
 T.SF <- matrix(6, nrow = length(point.list.SF), ncol = length(spp.list),
                dimnames = list(point.list.SF, spp.list))
 for(sp in 1:length(spp.list)) {
-  obs <- grab %>% filter(BirdCode == spp.list[sp] & str_sub(Point, 1, 2) == "SF")
+  obs <- grab %>% filter(BirdCode == spp.list[sp] & str_sub(Point, 1, 2) == "SF" &
+                           Point %in% point.list.SF)
   if(nrow(obs) > 0) {
     Y.SF[, sp] <- (point.list.SF %in% obs$Point) %>% as.integer
     tvec <- tapply(obs$TimePeriod, obs$Point, min)
@@ -332,9 +341,11 @@ for(sp in 1:length(spp.list)) {
 Cov.SF <- matrix(NA, nrow = length(point.list.SF), ncol = length(cov.names),
                  dimnames = list(point.list.SF, cov.names))
 Cov.SF[, "gridIndex"] <- point.list.SF %>% str_sub(1, -4) %>% as.factor %>% as.integer
-Cov.SF[, "DayOfYear"] <- (grab %>% filter(Stratum == "CO-CPW-SF") %>%
+Cov.SF[, "DayOfYear"] <- (grab %>% filter(Stratum == "CO-CPW-SF" &
+                                            Point %in% point.list.SF) %>%
                             select(Point, DOY) %>% unique %>% arrange(Point))$DOY
-Cov.SF[, "Time"] <- (grab %>% filter(Stratum == "CO-CPW-SF") %>%
+Cov.SF[, "Time"] <- (grab %>% filter(Stratum == "CO-CPW-SF" &
+                                       Point %in% point.list.SF) %>%
                             select(Point, Time_min) %>% unique %>% arrange(Point))$Time_min
 ind.vals <- which(point.list.SF %in% (cov_tab_import$Point %>% str_sub(8, -1)))
 Cov.SF[ind.vals, -c(1:3)] <- cov_tab_import %>%

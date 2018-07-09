@@ -44,6 +44,14 @@ model {
   tvar.Betad.TWIP ~ dt(0,1,1)  # Cauchy distribution
   sigma.Betad.TWIP <- abs(tvar.Betad.TWIP) # half-Cauchy distribution
   
+  Betad.RDens ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.RDens ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.RDens <- abs(tvar.Betad.RDens) # half-Cauchy distribution
+  
+  Betad.WILD ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.WILD ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.WILD <- abs(tvar.Betad.WILD) # half-Cauchy distribution
+  
   # covariates for theta (b)
   Betab.PctDead ~ dt(0, pow(t.sigma, -2), t.nu)
   tvar.Betab.PctDead ~ dt(0,1,1)  # Cauchy distribution
@@ -64,11 +72,7 @@ model {
   Betab.PctDdXYSO ~ dt(0, pow(t.sigma, -2), t.nu)
   tvar.Betab.PctDdXYSO ~ dt(0,1,1)  # Cauchy distribution
   sigma.Betab.PctDdXYSO <- abs(tvar.Betab.PctDdXYSO) # half-Cauchy distribution
-  
-  Betab.TWIP ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betab.TWIP ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betab.TWIP <- abs(tvar.Betab.TWIP) # half-Cauchy distribution
-  
+
   # covariates for p (a)
   Betaa.Time ~ dt(0, pow(t.sigma, -2), t.nu)
   tvar.Betaa.Time ~ dt(0,1,1)  # Cauchy distribution
@@ -97,7 +101,6 @@ model {
   # Impute missing data
   for(j in 1:n.point) {
     PctDead.b.imp[j] ~ dnorm(PctDead.b[j], pow(PctDead.sd[j], -2))T(PctDead.lower,)
-    TWIP.b.imp[j] ~ dnorm(TWIP.d[gridID[j]], pow(TWIP.sd[gridID[j]], -2))
     ccov.b.imp[j] ~ dnorm(ccov.means[gridID[j]], pow(ccov.sd[gridID[j]], -2))
     shcov.b.imp[j] ~ dnorm(shcov.means[gridID[j]], pow(shcov.sd[gridID[j]], -2))
   }
@@ -112,6 +115,8 @@ model {
     bd.outbrk[i] ~ dnorm(Betad.Outbrk, pow(sigma.Betad.Outbrk, -2))
     bd.YSO[i] ~ dnorm(Betad.YSO, pow(sigma.Betad.YSO, -2))
     bd.TWIP[i] ~ dnorm(Betad.TWIP, pow(sigma.Betad.TWIP, -2))
+    bd.RDens[i] ~ dnorm(Betad.RDens, pow(sigma.Betad.RDens, -2))
+    bd.WILD[i] ~ dnorm(Betad.WILD, pow(sigma.Betad.WILD, -2))
 
     # covariates for theta (b)
     bb.pdead[i] ~ dnorm(Betab.PctDead, pow(sigma.Betab.PctDead, -2))
@@ -119,7 +124,6 @@ model {
     bb.YSO[i] ~ dnorm(Betab.YSO, pow(sigma.Betab.YSO, -2))
     bb.YSO2[i] ~ dnorm(Betab.YSO2, pow(sigma.Betab.YSO2, -2))
     bb.pdXYSO[i] ~ dnorm(Betab.PctDdXYSO, pow(sigma.Betab.PctDdXYSO, -2))
-    bb.TWIP[i] ~ dnorm(Betab.TWIP, pow(sigma.Betab.TWIP, -2))
 
     # covariates for p (a)
     ba.Time[i] ~ dnorm(Betaa.Time, pow(sigma.Betaa.Time, -2))
@@ -133,7 +137,7 @@ model {
     w[i] ~ dbern(omega)
     for (k in 1:n.grid) {
       logit(psi[k, i]) <- d0[i] + bd.pdead[i]*PctDead.d[k] + bd.outbrk[i]*Outbrk.d[k] +
-        bd.YSO[i]*YSO.d[k] + bd.TWIP[i]*TWIP.d[k]
+        bd.YSO[i]*YSO.d[k] + bd.TWIP[i]*TWIP.d[k] + bd.RDens[i]*RDens.d[k] + bd.WILD[i]*WILD.d[k]
       z[k, i] ~ dbern(psi[k, i]*w[i])
     }
 
@@ -142,8 +146,7 @@ model {
         bb.pdead[i]*PctDead.b[j]*(1-PctDead.b.missing[j]) + bb.pdead[i]*PctDead.b.imp[j]*PctDead.b.missing[j] + 
         bb.outbrk[i]*Outbrk.b[j] + bb.YSO[i]*YSO.b[j] + bb.YSO2[i]*pow(YSO.b[j], 2) +
         bb.pdXYSO[i]*PctDead.b[j]*YSO.b[j]*(1-PctDead.b.missing[j]) +
-        bb.pdXYSO[i]*PctDead.b.imp[j]*YSO.b[j]*PctDead.b.missing[j] +
-        bb.TWIP[i]*TWIP.b[j]*(1-TWIP.b.missing[j]) + bb.TWIP[i]*TWIP.b.imp[j]*TWIP.b.missing[j]
+        bb.pdXYSO[i]*PctDead.b.imp[j]*YSO.b[j]*PctDead.b.missing[j]
       u[j, i] ~ dbern(theta[j, i]*z[gridID[j], i])
       
       logit(p[j, i]) <- a0[i] + ba.Time[i]*Time.b[j] + ba.Time2[i]*pow(Time.b[j], 2) +

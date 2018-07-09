@@ -27,8 +27,9 @@ for(i in 1:nsim) {
   pcap <- apply(pi, 1, sum)
   n.new <- rbinom(nPoint, size = mod$sims.list$N[i, ], prob = pcap)
   pic <- array(NA, dim = dim(pi))
-  for(t in 1:nInt) pic[, t] <- pi[, t] / pcap
-  for(n in 1:nrow(Y.new)) Y.new[n, ] <- rmultinom(1, n.new[n], pic[n, ])
+  pic <- pi / pcap
+  for(n in 1:nrow(Y.new)) Y.new[n, ] <- rmultinom(1, n.new[n], pic[n, ]) # Might be able to do without the loop
+  #Y.new <- rmultinom(nPoint, n.new, pic) # Try this next time??
   
   T.rep[i, ] <- apply(Y.new, 2, sum, na.rm = T)
 }
