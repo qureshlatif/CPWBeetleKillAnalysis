@@ -9,12 +9,12 @@ load("Data_compiled.RData")
 #### Script inputs ####
 stratum <- "LP"
 maxYSOForPD <- 12 # Set to 12 for LP and 9 for SF
-model.file <- "CPWBeetleKillAnalysis/model_outbreak_2ndOrdYSOAtPnt.jags"
+model.file <- "CPWBeetleKillAnalysis/model_outbreak.jags"
 
 # Data objects to send to JAGS
 data <- list("Y", "TPeriod", "gridID", "n.grid", "n.point", "n.spp", "PctDead.b",
              "PctDead.d", "PctDead.sd", "PctDead.lower", "PctDead.b.missing",
-             "YSO.b", "YSO.d", "Outbrk.b", "Outbrk.d",
+             "YSO.b", "YSO.mins", "YSO.maxs", "YSO.missing", "YSO.d", "Outbrk.d",
              "TWIP.d", "RDens.d", "WILD.d",
              "DOY.b", "Time.b",
              "ccov.b", "ccov.means", "ccov.sd", "ccov.b.missing",
@@ -26,7 +26,7 @@ parameters <- c("omega", "rho.ab", "rho.bd",
                 
                 "Betad.PctDead", "sigma.Betad.PctDead", "Betad.Outbrk", "sigma.Betad.Outbrk", "Betad.YSO", "sigma.Betad.YSO",
                 "Betad.TWIP", "sigma.Betad.TWIP", "Betad.RDens", "sigma.Betad.RDens", "Betad.WILD", "sigma.Betad.WILD",
-                "Betab.PctDead", "sigma.Betab.PctDead", "Betab.Outbrk", "sigma.Betab.Outbrk",
+                "Betab.PctDead", "sigma.Betab.PctDead",
                 "Betab.YSO", "sigma.Betab.YSO", "Betab.YSO2", "sigma.Betab.YSO2", "Betab.PctDdXYSO", "sigma.Betab.PctDdXYSO",
                 "Betaa.Time", "sigma.Betaa.Time", "Betaa.Time2", "sigma.Betaa.Time2",
                 "Betaa.DOY", "sigma.Betaa.DOY", "Betaa.DOY2", "sigma.Betaa.DOY2",
@@ -35,7 +35,7 @@ parameters <- c("omega", "rho.ab", "rho.bd",
                 
                 "d0", "b0", "a0",
                 "bd.pdead", "bd.outbrk", "bd.YSO", "bd.TWIP", "bd.RDens", "bd.WILD",
-                "bb.pdead", "bb.outbrk", "bb.YSO", "bb.YSO2", "bb.pdXYSO",
+                "bb.pdead", "bb.YSO", "bb.YSO2", "bb.pdXYSO",
                 "ba.Time", "ba.Time2", "ba.DOY", "ba.DOY2", "ba.ccov", "ba.shcov")
 
 # Function for setting initial values in JAGS
@@ -55,7 +55,7 @@ nb <- 5 #1000 # burn in
 ni <- 10 #15000 # number of iterations
 nt <- 1 #10 # thinning
 
-save.out <- "mod_LPcommunity_2ndorderAtPnt"
+save.out <- "mod_LPcommunity"
 ##########################
 
 # Detection data #
@@ -68,26 +68,36 @@ n.point <- dim(Y)[1]
 n.spp <- dim(Y)[2]
 
 # Covariates #
+outbreak_grids <- tapply(Cov[, "YSO"], Cov[, "gridIndex"], function(x) any(!is.na(x))) # index grids intersecting ADS outbreaks
+
 PctDead.b <- Cov[, "DeadConif"] # Point-level values
 PctDead.b[which(Cov[, "YSO"] > maxYSOForPD)] <- NA # Drop values from later years when (presumably) %Dead starts reflecting snag fall 
 PctDead.b <- PctDead.b %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Re-scale point values
 PctDead.d <- tapply(PctDead.b, gridID, mean, na.rm = T) # Grid-level values
-PctDead.b[which(is.na(PctDead.b) & is.na(Cov[, "YSO"]))] <- # Insert means for imputing PctDead outside ADS polygons
-  mean(PctDead.b[which(!is.na(PctDead.b) & is.na(Cov[, "YSO"]))])
-PctDead.b[which(is.na(PctDead.b) & !is.na(Cov[, "YSO"]))] <- # Insert means for imputing PctDead inside ADS polygons
-  mean(PctDead.b[which(!is.na(PctDead.b) & !is.na(Cov[, "YSO"]))])
-PctDead.sd <- sd(PctDead.b[which(is.na(Cov[, "YSO"]))]) %>% rep(length(PctDead.b)) # SDs for imputing missing values outside ADS polygons
-PctDead.sd[which(!is.na(Cov[, "YSO"]))] <- sd(PctDead.b[which(!is.na(Cov[, "YSO"]))]) # SDs for imputing missing values inside ADS polygons
+PctDead.b[which(is.na(PctDead.b) & !outbreak_grids[gridID])] <- # Insert means for imputing PctDead for points in non-outbreak grids
+  mean(PctDead.b[which(!is.na(PctDead.b) & !outbreak_grids[gridID])])
+PctDead.sd <- sd(PctDead.b[which(!outbreak_grids[gridID])]) %>% rep(length(PctDead.b)) # SDs for imputing missing values  for non-outbreak grids
+PctDead.b[which(is.na(PctDead.b) & outbreak_grids[gridID])] <- # Insert means for imputing PctDead for points within outbreak grids
+  mean(PctDead.b[which(!is.na(PctDead.b) & outbreak_grids[gridID])])
+PctDead.sd[which(outbreak_grids[gridID])] <- sd(PctDead.b[which(outbreak_grids[gridID])]) # SDs for imputing missing values inside ADS polygons
 PctDead.lower <- min(PctDead.b, na.rm = T) # Lower bound for imputing missing values
 PctDead.b.missing <- is.na(PctDead.b) %>% as.integer # Index missing values to be imputed
 
 YSO.b <- Cov[, "YSO"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
 YSO.d <- tapply(YSO.b, gridID, mean, na.rm = T) # Grid-level values
+YSO.mins <- tapply(YSO.b, gridID, min, na.rm = T) %>% as.numeric # Grid-level values
+YSO.maxs <- tapply(YSO.b, gridID, max, na.rm = T) %>% as.numeric  # Grid-level values
+YSO.mins[which(YSO.mins == Inf)] <- -1
+YSO.maxs[which(YSO.maxs == -Inf)] <- 1
+ind <- which(YSO.mins >= YSO.maxs)
+YSO.mins[ind] <- YSO.mins[ind] - 0.01
+YSO.maxs[ind] <- YSO.maxs[ind] + 0.01
+rm(ind)
+YSO.missing <- (is.na(YSO.b) & outbreak_grids[gridID]) %>% as.integer
 YSO.b[is.na(YSO.b)] <- 0
 YSO.d[is.na(YSO.d)] <- 0
 
-Outbrk.b <- Cov[, "YSO"] %>% (function(x) as.integer(!is.na(x)))
-Outbrk.d <- tapply(Outbrk.b, gridID, max)
+Outbrk.d <- outbreak_grids %>% as.integer()
 
 #TWIP.b <- Cov[, "TWIP"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
 TWIP.d <- Cov[, "TWIP"]  %>% # Grid-level values only

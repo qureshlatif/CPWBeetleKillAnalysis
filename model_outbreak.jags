@@ -57,10 +57,6 @@ model {
   tvar.Betab.PctDead ~ dt(0,1,1)  # Cauchy distribution
   sigma.Betab.PctDead <- abs(tvar.Betab.PctDead) # half-Cauchy distribution
 
-  Betab.Outbrk ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betab.Outbrk ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betab.Outbrk <- abs(tvar.Betab.Outbrk) # half-Cauchy distribution
-  
   Betab.YSO ~ dt(0, pow(t.sigma, -2), t.nu)
   tvar.Betab.YSO ~ dt(0,1,1)  # Cauchy distribution
   sigma.Betab.YSO <- abs(tvar.Betab.YSO) # half-Cauchy distribution
@@ -101,8 +97,13 @@ model {
   # Impute missing data
   for(j in 1:n.point) {
     PctDead.b.imp[j] ~ dnorm(PctDead.b[j], pow(PctDead.sd[j], -2))T(PctDead.lower,)
+    pdead[j] <- PctDead.b[j]*(1-PctDead.b.missing[j]) + PctDead.b.imp[j]*PctDead.b.missing[j]
+    YSO.b.imp[j] ~ dunif(YSO.mins[gridID[j]], YSO.maxs[gridID[j]])
+    yso[j] <- YSO.b[j]*(1 - YSO.missing[j]) + YSO.b.imp[j]*YSO.missing[j]
     ccov.b.imp[j] ~ dnorm(ccov.means[gridID[j]], pow(ccov.sd[gridID[j]], -2))
+    ccov[j] <- ccov.b[j]*(1 - ccov.b.missing[j]) + ccov.b.imp[j]*ccov.b.missing[j]
     shcov.b.imp[j] ~ dnorm(shcov.means[gridID[j]], pow(shcov.sd[gridID[j]], -2))
+    shcov[j] <- shcov.b[j]*(1 - shcov.b.missing[j]) + shcov.b.imp[j]*shcov.b.missing[j]
   }
   
   for (i in 1:n.spp) {
@@ -120,7 +121,6 @@ model {
 
     # covariates for theta (b)
     bb.pdead[i] ~ dnorm(Betab.PctDead, pow(sigma.Betab.PctDead, -2))
-    bb.outbrk[i] ~ dnorm(Betab.Outbrk, pow(sigma.Betab.Outbrk, -2))
     bb.YSO[i] ~ dnorm(Betab.YSO, pow(sigma.Betab.YSO, -2))
     bb.YSO2[i] ~ dnorm(Betab.YSO2, pow(sigma.Betab.YSO2, -2))
     bb.pdXYSO[i] ~ dnorm(Betab.PctDdXYSO, pow(sigma.Betab.PctDdXYSO, -2))
@@ -142,17 +142,12 @@ model {
     }
 
     for(j in 1:n.point) {
-      logit(theta[j, i]) <- b0[i] +
-        bb.pdead[i]*PctDead.b[j]*(1-PctDead.b.missing[j]) + bb.pdead[i]*PctDead.b.imp[j]*PctDead.b.missing[j] + 
-        bb.outbrk[i]*Outbrk.b[j] + bb.YSO[i]*YSO.b[j] + bb.YSO2[i]*pow(YSO.b[j], 2) +
-        bb.pdXYSO[i]*PctDead.b[j]*YSO.b[j]*(1-PctDead.b.missing[j]) +
-        bb.pdXYSO[i]*PctDead.b.imp[j]*YSO.b[j]*PctDead.b.missing[j]
+      logit(theta[j, i]) <- b0[i] + bb.pdead[i]*pdead[j] + bb.YSO[i]*yso[j] + bb.YSO2[i]*pow(yso[j], 2) +
+        bb.pdXYSO[i]*pdead[j]*yso[j]
       u[j, i] ~ dbern(theta[j, i]*z[gridID[j], i])
       
       logit(p[j, i]) <- a0[i] + ba.Time[i]*Time.b[j] + ba.Time2[i]*pow(Time.b[j], 2) +
-        ba.DOY[i]*DOY.b[j] + ba.DOY2[i]*pow(DOY.b[j], 2) +
-        ba.ccov[i]*ccov.b[j]*(1-ccov.b.missing[j]) + ba.ccov[i]*ccov.b.imp[j]*ccov.b.missing[j] +
-        ba.shcov[i]*shcov.b[j]*(1-shcov.b.missing[j]) + ba.shcov[i]*shcov.b.imp[j]*shcov.b.missing[j]
+        ba.DOY[i]*DOY.b[j] + ba.DOY2[i]*pow(DOY.b[j], 2) + ba.ccov[i]*ccov[j] + ba.shcov[i]*shcov[j]
       Y[j, i] ~ dbinom(p[j, i]*u[j, i], TPeriod[j, i])
     }
   }
