@@ -85,7 +85,12 @@ cov_tab_import <- read.csv("Covariates.csv", header = T, stringsAsFactors = F) %
   rename(WoodyCov = gc_woody) %>%
   rename(DDCov = gc_deadAndDown) %>%
   select(Point, TWIP, DeadConif, YSO, CanCov, RCOV_AS, RCOV_ES, RCOV_Pine, shrub_cover,
-         RCShrb_UD, HerbCov, WoodyCov, DDCov)
+         RCShrb_UD, HerbCov, WoodyCov, DDCov, WILD)
+
+cov_tab_import <- cov_tab_import %>%
+  left_join(foreign::read.dbf("C:/Users/Quresh.Latif/files/GIS/CPW/Point_coords.dbf", as.is = T) %>%
+              mutate(Point = str_c(TransectNu, "-", str_pad(Point, width = 2, side = "left", pad = "0"))) %>%
+              select(Point, Rd_dens1km), by = "Point")
 
 ## Compile detection data ##
 cov.names <- c("gridIndex", "DayOfYear", "Time", names(cov_tab_import)[-1])
@@ -113,13 +118,10 @@ dclass.LP <- dclass.LP %>%
   select(-CL_Count) %>%
   as.matrix()
 
-Y.LP.trem.all <- Y.LP.trem <- matrix(0, nrow = length(point.list.LP), max(grab.proc$TimePeriod, na.rm = T),
+Y.LP.trem <- matrix(0, nrow = length(point.list.LP), max(grab.proc$TimePeriod, na.rm = T),
                     dimnames = list(point.list.LP, NULL)) # Time removal N-mixture observation matrix
 for(k in 1:max(grab.proc$TimePeriod, na.rm = T)) {
   obs <- grab.proc %>% filter(TimePeriod == k & str_sub(Stratum, -2, -1) == "LP")
-  y <- tapply(obs$CL_Count, obs$Point, sum, na.rm = T)
-  Y.LP.trem.all[names(y), k] <- y
-  obs <- grab.proc %>% filter(TimePeriod == k & str_sub(Stratum, -2, -1) == "LP" & radialDistance <= 30)
   y <- tapply(obs$CL_Count, obs$Point, sum, na.rm = T)
   Y.LP.trem[names(y), k] <- y
 }
@@ -159,13 +161,10 @@ dclass.SF <- dclass.SF %>%
   select(-CL_Count) %>%
   as.matrix()
 
-Y.SF.trem.all <- Y.SF.trem <- matrix(0, nrow = length(point.list.SF), max(grab.proc$TimePeriod, na.rm = T),
+Y.SF.trem <- matrix(0, nrow = length(point.list.SF), max(grab.proc$TimePeriod, na.rm = T),
                     dimnames = list(point.list.SF, NULL)) # Time removal N-mixture observation matrix
 for(k in 1:max(grab.proc$TimePeriod, na.rm = T)) {
   obs <- grab.proc %>% filter(TimePeriod == k & str_sub(Stratum, -2, -1) == "SF")
-  y <- tapply(obs$CL_Count, obs$Point, sum, na.rm = T)
-  Y.SF.trem.all[names(y), k] <- y
-  obs <- grab.proc %>% filter(TimePeriod == k & str_sub(Stratum, -2, -1) == "SF", radialDistance <= 30)
   y <- tapply(obs$CL_Count, obs$Point, sum, na.rm = T)
   Y.SF.trem[names(y), k] <- y
 }
