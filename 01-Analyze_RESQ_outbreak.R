@@ -44,13 +44,13 @@ parameters <- c("beta0.mean", "beta0.sd", #"N.mean", "p.mean", # Assemble the pa
                 #"bt.DOY", "bt.DOY2",
                 #"bt.ccov", "bt.shcov",
                 ##______________________________##
-                "lambda", "p", # Needed for WAIC
+                "lambda", "a", # Needed for WAIC
                 "test") # GOF
 
 # MCMC values.  Adjust as needed.
 nc <- 3
 nb <- 5000
-ni <- 20000
+ni <- 15000
 nt <- 10
 
 save.out <- "mod_RESQ_outbreak_HZdist_LP"
