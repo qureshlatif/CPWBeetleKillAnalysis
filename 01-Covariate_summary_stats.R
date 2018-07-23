@@ -7,6 +7,7 @@ dat <- cov_tab_import %>%
   rename(YSI = YSO) %>%
   rename(RoadDens = Rd_dens1km) %>%
   mutate(Stratum = str_sub(Point, 1, 9)) %>%
+  mutate(DeadConif = replace(DeadConif, which(DeadConif == 1.25), 1)) %>% # fix incorrect DeadCon value
   filter(!is.na(TWIP)) # The two grids dropped here were in burned areas.
 
 dat.LP <- dat %>% filter(Stratum == "CO-CPW-LP") %>%
@@ -55,111 +56,110 @@ dat.SF <- dat %>% filter(Stratum == "CO-CPW-SF") %>%
 
 rows <- c("DeadConif", "DeadConif_SD", "YSI", "CanCov", "CanCov_SD", "RCOV_AS", "RCOV_ES", "RCOV_Pine", "shrub_cover", 
           "RCShrb_UC", "HerbCov", "WoodyCov", "DDCov", "RoadDens", "TWIP", "WILD")
-cols <- c("LP", "ntr.LP", "npt.LP", "SF", "ntr.SF", "npt.SF")
+cols <- c("LP.pt", "npt.LP", "LP.tr", "ntr.LP", "SF.pt", "npt.SF", "SF.tr", "ntr.SF")
 out <- matrix("", nrow = length(rows), ncol  = length(cols),
               dimnames = list(rows, cols))
 
 for(r in which(!rows %in% c("DeadConif_SD", "CanCov_SD", "WILD"))) {
   vec <- dat.LP[, rows[r]] %>% as.matrix %>% as.numeric
-  out[rows[r], "LP"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
+  out[rows[r], "LP.pt"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
     str_c(" (", vec %>% sd(na.rm = T) %>% round(digits = 2), ", ",
           vec %>% min(na.rm = T) %>% round(digits = 2), "-",
           vec %>% max(na.rm = T) %>% round(digits = 2), ")")
   out[rows[r], "npt.LP"] <- sum(!is.na(vec))
+  vec.tr <- vec %>%
+    tapply(dat.LP$Transect, mean, na.rm = T)
+  out[rows[r], "LP.tr"] <- vec.tr %>%
+    mean(na.rm = T) %>% round(digits = 2) %>%
+    str_c(" (", vec.tr %>% sd(na.rm = T) %>% round(digits = 2), ", ",
+          vec.tr %>% min(na.rm = T) %>% round(digits = 2), "-",
+          vec.tr %>% max(na.rm = T) %>% round(digits = 2), ")")
   out[rows[r], "ntr.LP"] <- vec %>% tapply(dat.LP$Transect, function(x)
     any(!is.na(x)) %>% as.integer) %>% sum
   vec <- dat.SF[, rows[r]] %>% as.matrix %>% as.numeric
-  out[rows[r], "SF"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
+  out[rows[r], "SF.pt"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
     str_c(" (", vec %>% sd(na.rm = T) %>% round(digits = 2), ", ",
           vec %>% min(na.rm = T) %>% round(digits = 2), "-",
           vec %>% max(na.rm = T) %>% round(digits = 2), ")")
   out[rows[r], "npt.SF"] <- sum(!is.na(vec))
+  vec.tr <- vec %>%
+    tapply(dat.SF$Transect, mean, na.rm = T)
+  out[rows[r], "SF.tr"] <- vec.tr %>%
+    mean(na.rm = T) %>% round(digits = 2) %>%
+    str_c(" (", vec.tr %>% sd(na.rm = T) %>% round(digits = 2), ", ",
+          vec.tr %>% min(na.rm = T) %>% round(digits = 2), "-",
+          vec.tr %>% max(na.rm = T) %>% round(digits = 2), ")")
   out[rows[r], "ntr.SF"] <- vec %>% tapply(dat.SF$Transect, function(x)
     any(!is.na(x)) %>% as.integer) %>% sum
 }
 
-# Grid-level Heterogeneity #
+# Grid-level heterogeneity metrics #
 vec <- (dat.LP %>%
     group_by(Transect) %>%
     summarise(DeadConif = sd(DeadConif, na.rm = T)))$DeadConif
-out["DeadConif_SD", "LP"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
+out["DeadConif_SD", "LP.tr"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
   str_c(" (", vec %>% sd(na.rm = T) %>% round(digits = 2), ", ",
         vec %>% min(na.rm = T) %>% round(digits = 2), "-",
         vec %>% max(na.rm = T) %>% round(digits = 2), ")")
 out["DeadConif_SD", "ntr.LP"] <- sum(!is.na(vec))
-out["DeadConif_SD", "npt.LP"] <- NA
+out["DeadConif_SD", "LP.pt"] <-
+  out["DeadConif_SD", "npt.LP"] <- NA
 
 vec <- (dat.SF %>%
           group_by(Transect) %>%
           summarise(DeadConif = sd(DeadConif, na.rm = T)))$DeadConif
-out["DeadConif_SD", "SF"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
+out["DeadConif_SD", "SF.tr"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
   str_c(" (", vec %>% sd(na.rm = T) %>% round(digits = 2), ", ",
         vec %>% min(na.rm = T) %>% round(digits = 2), "-",
         vec %>% max(na.rm = T) %>% round(digits = 2), ")")
 out["DeadConif_SD", "ntr.SF"] <- sum(!is.na(vec))
-out["DeadConif_SD", "npt.SF"] <- NA
+out["DeadConif_SD", "SF.pt"] <-
+  out["DeadConif_SD", "npt.SF"] <- NA
 
 vec <- (dat.LP %>%
           group_by(Transect) %>%
           summarise(CanCov = sd(CanCov, na.rm = T)))$CanCov
-out["CanCov_SD", "LP"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
+out["CanCov_SD", "LP.tr"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
   str_c(" (", vec %>% sd(na.rm = T) %>% round(digits = 2), ", ",
         vec %>% min(na.rm = T) %>% round(digits = 2), "-",
         vec %>% max(na.rm = T) %>% round(digits = 2), ")")
 out["CanCov_SD", "ntr.LP"] <- sum(!is.na(vec))
-out["CanCov_SD", "npt.LP"] <- NA
+out["CanCov_SD", "LP.pt"] <-
+  out["CanCov_SD", "npt.LP"] <- NA
 
 vec <- (dat.SF %>%
           group_by(Transect) %>%
           summarise(CanCov = sd(CanCov, na.rm = T)))$CanCov
-out["CanCov_SD", "SF"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
+out["CanCov_SD", "SF.tr"] <- vec %>% mean(na.rm = T) %>% round(digits = 2) %>%
   str_c(" (", vec %>% sd(na.rm = T) %>% round(digits = 2), ", ",
         vec %>% min(na.rm = T) %>% round(digits = 2), "-",
         vec %>% max(na.rm = T) %>% round(digits = 2), ")")
 out["CanCov_SD", "ntr.SF"] <- sum(!is.na(vec))
-out["CanCov_SD", "npt.SF"] <- NA
+out["CanCov_SD", "SF.pt"] <-
+  out["CanCov_SD", "npt.SF"] <- NA
 
 # Wilderness #
 vec <- dat.LP[, "WILD"] %>% as.matrix %>% as.numeric
-out["WILD", "LP"] <- vec %>%
+out["WILD", "LP.pt"] <- vec %>%
   (function(x) round(sum(x, na.rm = T) / sum(!is.na(x)) * 100)) %>%
   str_c("%")
 out["WILD", "npt.LP"] <- sum(!is.na(vec))
+out["WILD", "LP.tr"] <- vec %>%
+  tapply(dat.LP$Transect, mean) %>% round %>%
+  (function(x) round(sum(x, na.rm = T) / sum(!is.na(x)) * 100)) %>%
+  str_c("%")
 out["WILD", "ntr.LP"] <- vec %>% tapply(dat.LP$Transect, function(x)
   any(!is.na(x)) %>% as.integer) %>% sum
 vec <- dat.SF[, "WILD"] %>% as.matrix %>% as.numeric
-out["WILD", "SF"] <- vec %>%
+out["WILD", "SF.pt"] <- vec %>%
   (function(x) round(sum(x, na.rm = T) / sum(!is.na(x)) * 100)) %>%
   str_c("%")
 out["WILD", "npt.SF"] <- sum(!is.na(vec))
+out["WILD", "SF.tr"] <- vec %>%
+  tapply(dat.SF$Transect, mean) %>% round %>%
+  (function(x) round(sum(x, na.rm = T) / sum(!is.na(x)) * 100)) %>%
+  str_c("%")
 out["WILD", "ntr.SF"] <- vec %>% tapply(dat.SF$Transect, function(x)
   any(!is.na(x)) %>% as.integer) %>% sum
 
 write.csv(out, "Covariate_summary.csv", row.names = T)
-
-### Summarize grid-level heterogeneity for select variables ###
-## LP ##
-# Dead conifer
-tapply(dat.LP$DeadConif_RCov, dat.LP$Transect, sd, na.rm = T) %>% hist
-
-# Canopy cover
-tapply(dat.LP$CanCov, dat.LP$Transect, sd, na.rm = T) %>% hist
-
-# Aspen
-tapply(dat.LP$RCOV_AS, dat.LP$Transect, sd, na.rm = T) %>% hist
-
-# Shrub cover
-tapply(dat.LP$shrub_cover, dat.LP$Transect, sd, na.rm = T) %>% hist
-
-## SF ##
-# Dead conifer
-tapply(dat.SF$DeadConif_RCov, dat.SF$Transect, sd, na.rm = T) %>% hist
-
-# Canopy cover
-tapply(dat.SF$CanCov, dat.SF$Transect, sd, na.rm = T) %>% hist
-
-# Aspen
-tapply(dat.SF$RCOV_AS, dat.SF$Transect, sd, na.rm = T) %>% hist
-
-# Shrub cover
-tapply(dat.SF$shrub_cover, dat.SF$Transect, sd, na.rm = T) %>% hist

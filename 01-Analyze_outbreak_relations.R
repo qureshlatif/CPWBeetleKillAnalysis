@@ -7,15 +7,18 @@ setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 load("Data_compiled.RData")
 
 #### Script inputs ####
-stratum <- "LP"
-maxYSOForPD <- 12 # Set to 12 for LP and 9 for SF
-model.file <- "CPWBeetleKillAnalysis/model_outbreak.jags"
+stratum <- "SF"
+maxYSOForPD <- 9 # Set to 12 for LP and 9 for SF
+model.file <- "CPWBeetleKillAnalysis/model_outbreak_SF.jags"
 
 # Data objects to send to JAGS
 data <- list("Y", "TPeriod", "gridID", "n.grid", "n.point", "n.spp", "PctDead.b",
              "PctDead.d", "PctDead.sd", "PctDead.lower", "PctDead.b.missing",
-             "YSO.b", "YSO.mins", "YSO.maxs", "YSO.missing", "YSO.d", "Outbrk.d",
+             "YSO.b", "YSO.mins", "YSO.maxs", "YSO.missing", "YSO.d",
              "TWIP.d", "RDens.d", "WILD.d",
+             "RCovAS.d", "RCovAS.b", "RCovAS.sd", "RCovAS.b.missing", "RCovAS.lower",
+             "RCovES.d", "RCovES.b", "RCovES.sd", "RCovES.b.missing", "RCovES.lower",
+             "RCovPine.d", "RCovPine.b", "RCovPine.sd", "RCovPine.b.missing", "RCovPine.lower",
              "DOY.b", "Time.b",
              "ccov.b", "ccov.means", "ccov.sd", "ccov.b.missing",
              "shcov.b", "shcov.means", "shcov.sd", "shcov.b.missing")
@@ -24,27 +27,34 @@ data <- list("Y", "TPeriod", "gridID", "n.grid", "n.point", "n.spp", "PctDead.b"
 parameters <- c("omega", "rho.ab", "rho.bd",
                 "alpha0", "sigma.a0", "beta0", "sigma.b0", "delta0", "sigma.d0",
                 
-                "Betad.PctDead", "sigma.Betad.PctDead", "Betad.Outbrk", "sigma.Betad.Outbrk", "Betad.YSO", "sigma.Betad.YSO",
+                "Betad.PctDead", "sigma.Betad.PctDead", "Betad.YSO", "sigma.Betad.YSO",
                 "Betad.TWIP", "sigma.Betad.TWIP", "Betad.RDens", "sigma.Betad.RDens", "Betad.WILD", "sigma.Betad.WILD",
+                "Betad.RCovAS", "sigma.Betad.RCovAS", "Betad.RCovES", "sigma.Betad.RCovES", "Betad.RCovPine", "sigma.Betad.RCovPine",
                 "Betab.PctDead", "sigma.Betab.PctDead",
                 "Betab.YSO", "sigma.Betab.YSO", "Betab.YSO2", "sigma.Betab.YSO2", "Betab.PctDdXYSO", "sigma.Betab.PctDdXYSO",
+                "Betab.RCovAS", "sigma.Betab.RCovAS", "Betab.RCovES", "sigma.Betab.RCovES", "Betab.RCovPine", "sigma.Betab.RCovPine",
                 "Betaa.Time", "sigma.Betaa.Time", "Betaa.Time2", "sigma.Betaa.Time2",
                 "Betaa.DOY", "sigma.Betaa.DOY", "Betaa.DOY2", "sigma.Betaa.DOY2",
                 "Betaa.CCov", "sigma.Betaa.CCov",
                 "Betaa.SHCov", "sigma.Betaa.SHCov",
                 
                 "d0", "b0", "a0",
-                "bd.pdead", "bd.outbrk", "bd.YSO", "bd.TWIP", "bd.RDens", "bd.WILD",
+                "bd.pdead", "bd.YSO", "bd.TWIP", "bd.RDens", "bd.WILD",
+                "bd.RCovAS", "bd.RCovES", "bd.RCovPine",
+                "bb.RCovAS", "bb.RCovES", "bb.RCovPine",
                 "bb.pdead", "bb.YSO", "bb.YSO2", "bb.pdXYSO",
+                "bb.RCovAS", "bb.RCovES", "bb.RCovPine",
                 "ba.Time", "ba.Time2", "ba.DOY", "ba.DOY2", "ba.ccov", "ba.shcov")
 
 # Function for setting initial values in JAGS
 inits <- function()
   list(z=z.init, u=u.init, w=w.init, tvar.sigma.a0 = rnorm(1), tvar.sigma.b0 = rnorm(1), tvar.sigma.d0 = rnorm(1),
-       tvar.Betad.PctDead = rnorm(1), tvar.Betad.Outbrk = rnorm(1), tvar.Betad.YSO = rnorm(1),
+       tvar.Betad.PctDead = rnorm(1), tvar.Betad.YSO = rnorm(1),
        tvar.Betad.TWIP = rnorm(1), tvar.Betad.RDens = rnorm(1), tvar.Betad.WILD = rnorm(1),
-       tvar.Betab.PctDead = rnorm(1), tvar.Betab.Outbrk = rnorm(1), tvar.Betab.YSO = rnorm(1),
+       tvar.Betad.RCovAS = rnorm(1), tvar.Betad.RCovES = rnorm(1), tvar.Betad.RCovPine = rnorm(1),
+       tvar.Betab.PctDead = rnorm(1), tvar.Betab.YSO = rnorm(1),
        tvar.Betab.YSO2 = rnorm(1), tvar.Betab.PctDdXYSO = rnorm(1),
+       tvar.Betab.RCovAS = rnorm(1), tvar.Betab.RCovES = rnorm(1), tvar.Betab.RCovPine = rnorm(1),
        tvar.Betaa.Time = rnorm(1), tvar.Betaa.Time2 = rnorm(1),
        tvar.Betaa.DOY = rnorm(1), tvar.Betaa.DOY2 = rnorm(1),
        tvar.Betaa.CCov = rnorm(1), tvar.Betaa.SHCov = rnorm(1))
@@ -55,7 +65,7 @@ nb <- 5 #1000 # burn in
 ni <- 10 #15000 # number of iterations
 nt <- 1 #10 # thinning
 
-save.out <- "mod_LPcommunity"
+save.out <- "mod_SFcommunity_outbreak"
 ##########################
 
 # Detection data #
@@ -97,8 +107,6 @@ YSO.missing <- (is.na(YSO.b) & outbreak_grids[gridID]) %>% as.integer
 YSO.b[is.na(YSO.b)] <- 0
 YSO.d[is.na(YSO.d)] <- 0
 
-Outbrk.d <- outbreak_grids %>% as.integer()
-
 #TWIP.b <- Cov[, "TWIP"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
 TWIP.d <- Cov[, "TWIP"]  %>% # Grid-level values only
   tapply(gridID, mean) %>%
@@ -110,6 +118,36 @@ RDens.d <- Cov[, "Rd_dens1km"]  %>% # Grid-level values only
 
 WILD.d <- Cov[, "WILD"]  %>% # Grid-level values only
   tapply(gridID, function(x) (mean(x) >= 0.5)*1)
+
+RCovAS.b <- Cov[, "RCOV_AS"] %>% # Point-level values
+  (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Re-scale point values
+RCovAS.d <- tapply(RCovAS.b, gridID, mean, na.rm = T) # Grid-level values
+RCovAS.b.missing <- is.na(RCovAS.b) %>% as.integer # Index missing values to be imputed
+RCovAS.sd <- tapply(RCovAS.b, gridID, sd, na.rm = T) # SDs for imputing missing values  for non-outbreak grids
+if(any(RCovAS.sd==0))
+  RCovAS.sd[which(RCovAS.sd==0)] <- min(RCovAS.sd[which(RCovAS.sd>0)])
+RCovAS.lower <- min(RCovAS.b, na.rm = T) # Lower bound for imputing missing values
+RCovAS.b[which(is.na(RCovAS.b))] <- RCovAS.d[gridID][which(is.na(RCovAS.b))] # Insert means for imputing PctDead for points in non-outbreak grids
+
+RCovES.b <- Cov[, "RCOV_ES"] %>% # Point-level values
+  (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Re-scale point values
+RCovES.d <- tapply(RCovES.b, gridID, mean, na.rm = T) # Grid-level values
+RCovES.b.missing <- is.na(RCovES.b) %>% as.integer # Index missing values to be imputed
+RCovES.sd <- tapply(RCovES.b, gridID, sd, na.rm = T) # SDs for imputing missing values  for non-outbreak grids
+if(any(RCovES.sd==0))
+  RCovES.sd[which(RCovES.sd==0)] <- min(RCovES.sd[which(RCovES.sd>0)])
+RCovES.lower <- min(RCovES.b, na.rm = T) # Lower bound for imputing missing values
+RCovES.b[which(is.na(RCovES.b))] <- RCovES.d[gridID][which(is.na(RCovES.b))] # Insert means for imputing PctDead for points in non-outbreak grids
+
+RCovPine.b <- Cov[, "RCOV_Pine"] %>% # Point-level values
+  (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Re-scale point values
+RCovPine.d <- tapply(RCovPine.b, gridID, mean, na.rm = T) # Grid-level values
+RCovPine.b.missing <- is.na(RCovPine.b) %>% as.integer # Index missing values to be imputed
+RCovPine.sd <- tapply(RCovPine.b, gridID, sd, na.rm = T) # SDs for imputing missing values  for non-outbreak grids
+if(any(RCovPine.sd==0))
+  RCovPine.sd[which(RCovPine.sd==0)] <- min(RCovPine.sd[which(RCovPine.sd>0)])
+RCovPine.lower <- min(RCovPine.b, na.rm = T) # Lower bound for imputing missing values
+RCovPine.b[which(is.na(RCovPine.b))] <- RCovPine.d[gridID][which(is.na(RCovPine.b))] # Insert means for imputing PctDead for points in non-outbreak grids
 
 DOY.b <- Cov[, "DayOfYear"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
 
