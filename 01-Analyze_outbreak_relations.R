@@ -44,7 +44,9 @@ parameters <- c("omega", "rho.ab", "rho.bd",
                 "bb.RCovAS", "bb.RCovES", "bb.RCovPine",
                 "bb.pdead", "bb.YSO", "bb.YSO2", "bb.pdXYSO",
                 "bb.RCovAS", "bb.RCovES", "bb.RCovPine",
-                "ba.Time", "ba.Time2", "ba.DOY", "ba.DOY2", "ba.ccov", "ba.shcov")
+                "ba.Time", "ba.Time2", "ba.DOY", "ba.DOY2", "ba.ccov", "ba.shcov",
+                
+                "SR.grid", "SR.point")
 
 # Function for setting initial values in JAGS
 inits <- function()

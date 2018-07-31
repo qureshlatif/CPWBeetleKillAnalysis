@@ -151,4 +151,13 @@ model {
       Y[j, i] ~ dbinom(p[j, i]*u[j, i], TPeriod[j, i])
     }
   }
+  
+  # Derive species richness at both scales #
+  for(k in 1:n.grid) {
+    SR.grid[k] <- sum(z[k, ])
+  }
+
+  for(j in 1:n.point) {
+    SR.point[j] <- sum(u[j, ])
+  }
 }
