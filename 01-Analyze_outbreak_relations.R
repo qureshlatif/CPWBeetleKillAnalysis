@@ -61,9 +61,9 @@ inits <- function()
 
 # MCMC values
 nc <- 3 # number of chains
-nb <- 5 #1000 # burn in
-ni <- 10 #15000 # number of iterations
-nt <- 1 #10 # thinning
+nb <- 5000 # burn in
+ni <- 30000 # number of iterations
+nt <- 10 # thinning
 
 save.out <- "mod_SFcommunity_outbreak"
 ##########################
