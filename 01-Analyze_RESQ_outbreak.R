@@ -9,7 +9,7 @@ load("Data_compiled_RESQ.RData")
 
 #____________________________________________________ Script inputs _____________________________________________________________#
 stratum <- "LP" # Set stratum (LP or SF)
-#model.file <- "CPWBeetleKillAnalysis/model_RESQ_outbreak_HZp(red_LP)_N(Pdead_pDeadXYSO_NdropXYSO).jags"
+maxYSOForPD <- 12 # Set to 12 for LP and 9 for SF
 model.file <- "CPWBeetleKillAnalysis/model_RESQ_outbreak_HZdist_LP.jags"
 
 data <- list("Y",
@@ -20,10 +20,12 @@ data <- list("Y",
              "Time.b", "DOY.b", "ccov.b", #"shcov.b",
              "PctDead.b", "YSO.b", "YSO.mins", "YSO.maxs", "YSO.missing",
              "PctDead.sd", "PctDead.lower", "PctDead.b.missing",
-             "TWIP.d", "RDens.d", "WILD.d", "Outbrk.d",
-             "ccov.means", "ccov.sd", "ccov.b.missing"#,
-             #"shcov.means", "shcov.sd", "shcov.b.missing",
-             ) # Inputs for JAGS model.
+             "TWIP.d", "RDens.d", "WILD.d",
+             "RCovAS.d", "RCovAS.b", "RCovAS.sd", "RCovAS.b.missing", "RCovAS.lower",
+             #"RCovES.d", "RCovES.b", "RCovES.sd", "RCovES.b.missing", "RCovES.lower",
+             "RCovPine.d", "RCovPine.b", "RCovPine.sd", "RCovPine.b.missing", "RCovPine.lower",
+             "ccov.means", "ccov.sd", "ccov.b.missing")#,
+             #"shcov.means", "shcov.sd", "shcov.b.missing") # Inputs for JAGS model.
 
 parameters <- c("beta0.mean", "beta0.sd", #"N.mean", "p.mean", # Assemble the parameters vector for JAGS (What we want to track).
                 "beta0", "N",
@@ -31,7 +33,10 @@ parameters <- c("beta0.mean", "beta0.sd", #"N.mean", "p.mean", # Assemble the pa
                 "bl.YSO",
                 "bl.YSO2",
                 "bl.pdXYSO",
-                "bd.TWIP", "bd.RDens", "bd.WILD", "bd.outbrk",
+                "bd.TWIP", "bd.RDens", "bd.WILD",
+                "bl.RCovAS",
+                #"bl.RCovES",
+                "bl.RCovPine",
                 ##___ Hazard rate parameters ___##
                 "a0", "a.Time", #"a.Time2",
                 "a.DOY", "a.DOY2",
@@ -50,7 +55,7 @@ parameters <- c("beta0.mean", "beta0.sd", #"N.mean", "p.mean", # Assemble the pa
 # MCMC values.  Adjust as needed.
 nc <- 3
 nb <- 5000
-ni <- 15000
+ni <- 20000
 nt <- 10
 
 save.out <- "mod_RESQ_outbreak_HZdist_LP"
@@ -82,7 +87,7 @@ nGrid <- max(gridID)
 # Covariates #
 Cov <- eval(as.name(str_c("Cov.", stratum)))
 PctDead.b <- Cov[, "DeadConif"] # Point-level values
-PctDead.b[which(Cov[, "YSO"] > 12)] <- NA # Drop values from later years when (presumably) %Dead starts reflecting snag fall 
+PctDead.b[which(Cov[, "YSO"] > maxYSOForPD)] <- NA # Drop values from later years when (presumably) %Dead starts reflecting snag fall 
 PctDead.b <- PctDead.b %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Re-scale point values
 PctDead.b[which(is.na(PctDead.b) & is.na(Cov[, "YSO"]))] <- # Insert means for imputing PctDead outside ADS polygons
   mean(PctDead.b[which(!is.na(PctDead.b) & is.na(Cov[, "YSO"]))])
@@ -106,8 +111,6 @@ rm(ind)
 YSO.missing <- (is.na(YSO.b) & outbreak_grids[gridID]) %>% as.integer
 YSO.b[is.na(YSO.b)] <- 0
 
-Outbrk.d <- outbreak_grids %>% as.integer()
-
 TWIP.d <- Cov[, "TWIP"]  %>% # Grid-level values only
   tapply(gridID, mean, na.rm = T) %>%
   (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T))
@@ -118,6 +121,36 @@ RDens.d <- Cov[, "Rd_dens1km"]  %>% # Grid-level values only
 
 WILD.d <- Cov[, "WILD"]  %>% # Grid-level values only
   tapply(gridID, function(x) (mean(x, na.rm = T) >= 0.5)*1)
+
+RCovAS.b <- Cov[, "RCOV_AS"] %>% # Point-level values
+  (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Re-scale point values
+RCovAS.d <- tapply(RCovAS.b, gridID, mean, na.rm = T) # Grid-level values
+RCovAS.b.missing <- is.na(RCovAS.b) %>% as.integer # Index missing values to be imputed
+RCovAS.sd <- tapply(RCovAS.b, gridID, sd, na.rm = T) # SDs for imputing missing values  for non-outbreak grids
+if(any(RCovAS.sd==0))
+  RCovAS.sd[which(RCovAS.sd==0)] <- min(RCovAS.sd[which(RCovAS.sd>0)])
+RCovAS.lower <- min(RCovAS.b, na.rm = T) # Lower bound for imputing missing values
+RCovAS.b[which(is.na(RCovAS.b))] <- RCovAS.d[gridID][which(is.na(RCovAS.b))] # Insert means for imputing PctDead for points in non-outbreak grids
+
+RCovES.b <- Cov[, "RCOV_ES"] %>% # Point-level values
+  (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Re-scale point values
+RCovES.d <- tapply(RCovES.b, gridID, mean, na.rm = T) # Grid-level values
+RCovES.b.missing <- is.na(RCovES.b) %>% as.integer # Index missing values to be imputed
+RCovES.sd <- tapply(RCovES.b, gridID, sd, na.rm = T) # SDs for imputing missing values  for non-outbreak grids
+if(any(RCovES.sd==0))
+  RCovES.sd[which(RCovES.sd==0)] <- min(RCovES.sd[which(RCovES.sd>0)])
+RCovES.lower <- min(RCovES.b, na.rm = T) # Lower bound for imputing missing values
+RCovES.b[which(is.na(RCovES.b))] <- RCovES.d[gridID][which(is.na(RCovES.b))] # Insert means for imputing PctDead for points in non-outbreak grids
+
+RCovPine.b <- Cov[, "RCOV_Pine"] %>% # Point-level values
+  (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Re-scale point values
+RCovPine.d <- tapply(RCovPine.b, gridID, mean, na.rm = T) # Grid-level values
+RCovPine.b.missing <- is.na(RCovPine.b) %>% as.integer # Index missing values to be imputed
+RCovPine.sd <- tapply(RCovPine.b, gridID, sd, na.rm = T) # SDs for imputing missing values  for non-outbreak grids
+if(any(RCovPine.sd==0))
+  RCovPine.sd[which(RCovPine.sd==0)] <- min(RCovPine.sd[which(RCovPine.sd>0)])
+RCovPine.lower <- min(RCovPine.b, na.rm = T) # Lower bound for imputing missing values
+RCovPine.b[which(is.na(RCovPine.b))] <- RCovPine.d[gridID][which(is.na(RCovPine.b))] # Insert means for imputing PctDead for points in non-outbreak grids
 
 DOY.b <- Cov[, "DayOfYear"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
 

@@ -23,17 +23,18 @@
       bd.TWIP ~ dnorm(0, 0.1)
       bd.RDens ~ dnorm(0, 0.1)
       bd.WILD ~ dnorm(0, 0.1)
-      bd.outbrk ~ dnorm(0, 0.1)
-      
+
       for(g in 1:nGrid) {
         beta00[g] ~ dnorm(beta0.mean, beta0.tau)
-        beta0[g] <- beta00[g] + bd.TWIP*TWIP.d[g] + bd.RDens*RDens.d[g] + bd.WILD*WILD.d[g] + bd.outbrk*Outbrk.d[g]
+        beta0[g] <- beta00[g] + bd.TWIP*TWIP.d[g] + bd.RDens*RDens.d[g] + bd.WILD*WILD.d[g]
       }
 
       bl.pdead ~ dnorm(0, 0.1)
       bl.YSO ~ dnorm(0, 0.1)
       bl.YSO2 ~ dnorm(0, 0.1)
       bl.pdXYSO ~ dnorm(0, 0.1)
+      bl.RCovAS ~ dnorm(0, 0.1)
+      bl.RCovPine ~ dnorm(0, 0.1)
 
       # Impute missing data
       for(j in 1:nPoint) {
@@ -43,6 +44,10 @@
         pdead[j] <- PctDead.b[j]*(1-PctDead.b.missing[j]) + PctDead.b.imp[j]*PctDead.b.missing[j]
         ccov.b.imp[j] ~ dnorm(ccov.means[gridID[j]], pow(ccov.sd[gridID[j]], -2))
         ccov[j] <- ccov.b[j]*(1 - ccov.b.missing[j]) + ccov.b.imp[j]*ccov.b.missing[j]
+        RCovAS.b.imp[j] ~ dnorm(RCovAS.d[gridID[j]], pow(RCovAS.sd[gridID[j]], -2))T(RCovAS.lower,)
+        RCovAS[j] <- RCovAS.b[j]*(1 - RCovAS.b.missing[j]) + RCovAS.b.imp[j]*RCovAS.b.missing[j]
+        RCovPine.b.imp[j] ~ dnorm(RCovPine.d[gridID[j]], pow(RCovPine.sd[gridID[j]], -2))T(RCovPine.lower,)
+        RCovPine[j] <- RCovPine.b[j]*(1 - RCovPine.b.missing[j]) + RCovPine.b.imp[j]*RCovPine.b.missing[j]
       }
 
       ### Point-level loop
@@ -50,7 +55,7 @@
         ## Abundance model
         log(lambda[j]) <- beta0[gridID[j]] + # Add point-level abundance covariates here
           bl.pdead*pdead[j] + bl.YSO*yso[j] + bl.YSO2*pow(yso[j], 2) +
-          bl.pdXYSO*pdead[j]*yso[j]
+          bl.pdXYSO*pdead[j]*yso[j] + bl.RCovAS*RCovAS[j] + bl.RCovPine*RCovPine[j]
         N[j] ~ dpois(lambda[j])
         Y[j] ~ dbin(pcap[j], N[j]) # Observation model
         

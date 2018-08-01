@@ -32,10 +32,6 @@ model {
   tvar.Betad.PctDead ~ dt(0,1,1)  # Cauchy distribution
   sigma.Betad.PctDead <- abs(tvar.Betad.PctDead) # half-Cauchy distribution
 
-  Betad.Outbrk ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betad.Outbrk ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betad.Outbrk <- abs(tvar.Betad.Outbrk) # half-Cauchy distribution
-  
   Betad.YSO ~ dt(0, pow(t.sigma, -2), t.nu)
   tvar.Betad.YSO ~ dt(0,1,1)  # Cauchy distribution
   sigma.Betad.YSO <- abs(tvar.Betad.YSO) # half-Cauchy distribution
@@ -52,6 +48,14 @@ model {
   tvar.Betad.WILD ~ dt(0,1,1)  # Cauchy distribution
   sigma.Betad.WILD <- abs(tvar.Betad.WILD) # half-Cauchy distribution
   
+  Betad.RCovAS ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.RCovAS ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.RCovAS <- abs(tvar.Betad.RCovAS) # half-Cauchy distribution
+
+  Betad.RCovPine ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.RCovPine ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.RCovPine <- abs(tvar.Betad.RCovPine) # half-Cauchy distribution
+
   # covariates for theta (b)
   Betab.PctDead ~ dt(0, pow(t.sigma, -2), t.nu)
   tvar.Betab.PctDead ~ dt(0,1,1)  # Cauchy distribution
@@ -68,6 +72,14 @@ model {
   Betab.PctDdXYSO ~ dt(0, pow(t.sigma, -2), t.nu)
   tvar.Betab.PctDdXYSO ~ dt(0,1,1)  # Cauchy distribution
   sigma.Betab.PctDdXYSO <- abs(tvar.Betab.PctDdXYSO) # half-Cauchy distribution
+
+  Betab.RCovAS ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.RCovAS ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.RCovAS <- abs(tvar.Betab.RCovAS) # half-Cauchy distribution
+
+  Betab.RCovPine ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.RCovPine ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.RCovPine <- abs(tvar.Betab.RCovPine) # half-Cauchy distribution
 
   # covariates for p (a)
   Betaa.Time ~ dt(0, pow(t.sigma, -2), t.nu)
@@ -104,6 +116,10 @@ model {
     ccov[j] <- ccov.b[j]*(1 - ccov.b.missing[j]) + ccov.b.imp[j]*ccov.b.missing[j]
     shcov.b.imp[j] ~ dnorm(shcov.means[gridID[j]], pow(shcov.sd[gridID[j]], -2))
     shcov[j] <- shcov.b[j]*(1 - shcov.b.missing[j]) + shcov.b.imp[j]*shcov.b.missing[j]
+    RCovAS.b.imp[j] ~ dnorm(RCovAS.d[gridID[j]], pow(RCovAS.sd[gridID[j]], -2))T(RCovAS.lower,)
+    RCovAS[j] <- RCovAS.b[j]*(1 - RCovAS.b.missing[j]) + RCovAS.b.imp[j]*RCovAS.b.missing[j]
+    RCovPine.b.imp[j] ~ dnorm(RCovPine.d[gridID[j]], pow(RCovPine.sd[gridID[j]], -2))T(RCovPine.lower,)
+    RCovPine[j] <- RCovPine.b[j]*(1 - RCovPine.b.missing[j]) + RCovPine.b.imp[j]*RCovPine.b.missing[j]
   }
   
   for (i in 1:n.spp) {
@@ -113,17 +129,20 @@ model {
 
     # covariates for psi (d)
     bd.pdead[i] ~ dnorm(Betad.PctDead, pow(sigma.Betad.PctDead, -2))
-    bd.outbrk[i] ~ dnorm(Betad.Outbrk, pow(sigma.Betad.Outbrk, -2))
     bd.YSO[i] ~ dnorm(Betad.YSO, pow(sigma.Betad.YSO, -2))
     bd.TWIP[i] ~ dnorm(Betad.TWIP, pow(sigma.Betad.TWIP, -2))
     bd.RDens[i] ~ dnorm(Betad.RDens, pow(sigma.Betad.RDens, -2))
     bd.WILD[i] ~ dnorm(Betad.WILD, pow(sigma.Betad.WILD, -2))
+    bd.RCovAS[i] ~ dnorm(Betad.RCovAS, pow(sigma.Betad.RCovAS, -2))
+    bd.RCovPine[i] ~ dnorm(Betad.RCovPine, pow(sigma.Betad.RCovPine, -2))
 
     # covariates for theta (b)
     bb.pdead[i] ~ dnorm(Betab.PctDead, pow(sigma.Betab.PctDead, -2))
     bb.YSO[i] ~ dnorm(Betab.YSO, pow(sigma.Betab.YSO, -2))
     bb.YSO2[i] ~ dnorm(Betab.YSO2, pow(sigma.Betab.YSO2, -2))
     bb.pdXYSO[i] ~ dnorm(Betab.PctDdXYSO, pow(sigma.Betab.PctDdXYSO, -2))
+    bb.RCovAS[i] ~ dnorm(Betab.RCovAS, pow(sigma.Betab.RCovAS, -2))
+    bb.RCovPine[i] ~ dnorm(Betab.RCovPine, pow(sigma.Betab.RCovPine, -2))
 
     # covariates for p (a)
     ba.Time[i] ~ dnorm(Betaa.Time, pow(sigma.Betaa.Time, -2))
@@ -136,14 +155,15 @@ model {
     # state processes
     w[i] ~ dbern(omega)
     for (k in 1:n.grid) {
-      logit(psi[k, i]) <- d0[i] + bd.pdead[i]*PctDead.d[k] + bd.outbrk[i]*Outbrk.d[k] +
-        bd.YSO[i]*YSO.d[k] + bd.TWIP[i]*TWIP.d[k] + bd.RDens[i]*RDens.d[k] + bd.WILD[i]*WILD.d[k]
+      logit(psi[k, i]) <- d0[i] + bd.pdead[i]*PctDead.d[k] + bd.YSO[i]*YSO.d[k] +
+        bd.TWIP[i]*TWIP.d[k] + bd.RDens[i]*RDens.d[k] + bd.WILD[i]*WILD.d[k] +
+        bd.RCovAS[i]*RCovAS.d[k] + bd.RCovPine[i]*RCovPine.d[k]
       z[k, i] ~ dbern(psi[k, i]*w[i])
     }
 
     for(j in 1:n.point) {
       logit(theta[j, i]) <- b0[i] + bb.pdead[i]*pdead[j] + bb.YSO[i]*yso[j] + bb.YSO2[i]*pow(yso[j], 2) +
-        bb.pdXYSO[i]*pdead[j]*yso[j]
+        bb.pdXYSO[i]*pdead[j]*yso[j] + bb.RCovAS[i]*RCovAS[j] + bb.RCovPine[i]*RCovPine[j]
       u[j, i] ~ dbern(theta[j, i]*z[gridID[j], i])
       
       logit(p[j, i]) <- a0[i] + ba.Time[i]*Time.b[j] + ba.Time2[i]*pow(Time.b[j], 2) +
