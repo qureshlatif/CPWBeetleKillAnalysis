@@ -11,10 +11,12 @@ setwd("C:/Users/Quresh.Latif/files/projects/CPW/")
 load("Data_compiled_RESQ.RData")
 
 #___ Inputs ___#
-mod <- loadObject("mod_RESQ_HZp(red_SF)_N(Pdead_pDeadXYSO_NdropXYSO)")
-pars <- c("beta0.mean", "beta0.sd", "bl.pdead", "bl.pdead2", "bl.outbrk", # Parameters of interest
-          "bl.YSO", "bl.YSO2", "bl.pdXYSO", "bl.NdropXYSO",
-          "bl.TWIP", "a0", "b", "a.Time", "a.Time2", "a.DOY", "a.DOY2",
+mod <- loadObject("mod_RESQ_outbreak_HZdist_LP_global")
+pars <- c("beta0.mean", "beta0.sd", "bl.pdead", # Parameters of interest
+          "bl.YSO", "bl.YSO2", "bl.pdXYSO",
+          "bl.RCovAS", "bl.RCovES", "bl.RCovPine",
+          "bd.TWIP", "bd.RDens", "bd.WILD",
+          "a0", "b", "a.Time", "a.DOY", "a.DOY2",
           "a.ccov", "a.shcov", "bt.0", "bt.Time", "bt.Time2", "bt.DOY",
           "bt.DOY2", "bt.ccov", "bt.shcov")
 tab.out <- "Param_summ_RESQ.csv"

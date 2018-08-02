@@ -85,7 +85,8 @@ cov_tab_import <- read.csv("Covariates.csv", header = T, stringsAsFactors = F) %
   rename(WoodyCov = gc_woody) %>%
   rename(DDCov = gc_deadAndDown) %>%
   select(Point, TWIP, DeadConif, YSO, CanCov, RCOV_AS, RCOV_ES, RCOV_Pine, shrub_cover,
-         RCShrb_UD, HerbCov, WoodyCov, DDCov, WILD)
+         RCShrb_UD, HerbCov, WoodyCov, DDCov, WILD) %>%
+  filter(!is.na(TWIP))
 
 cov_tab_import <- cov_tab_import %>%
   left_join(foreign::read.dbf("C:/Users/Quresh.Latif/files/GIS/CPW/Point_coords.dbf", as.is = T) %>%
@@ -101,12 +102,17 @@ grab.proc <- grab.proc %>%
 # Lodgepole pine stratum #
 point.list.LP <- grab.proc$Point[which(str_sub(grab.proc$Point, 1, 2) == "LP")] %>%
   unique %>% sort
+point.list.LP <- point.list.LP[which(point.list.LP %in%
+                                       (cov_tab_import$Point %>%
+                                          str_sub(8, -1)))]
 
-ind.LP <- which(grab.proc$Stratum == "CO-CPW-LP")
+ind.LP <- which(grab.proc$Stratum == "CO-CPW-LP" &
+                  grab.proc$Point %in% point.list.LP)
 Y.LP.dist <- tapply(grab.proc$CL_Count[ind.LP], grab.proc$Point[ind.LP], sum, na.rm = T)
 rm(ind.LP)
 dclass.LP <- grab.proc %>%
   filter(!is.na(grab.proc$CL_Count) & grab.proc$Stratum == "CO-CPW-LP") %>%
+  filter(Point %in% point.list.LP) %>%
   select(CL_Count, dclass, Point) %>%
   mutate(Point = match(Point, names(Y.LP.dist)))
 for(i in 2:max(dclass.LP$CL_Count)) { # Replicate rows representing > 1 individual
@@ -121,7 +127,8 @@ dclass.LP <- dclass.LP %>%
 Y.LP.trem <- matrix(0, nrow = length(point.list.LP), max(grab.proc$TimePeriod, na.rm = T),
                     dimnames = list(point.list.LP, NULL)) # Time removal N-mixture observation matrix
 for(k in 1:max(grab.proc$TimePeriod, na.rm = T)) {
-  obs <- grab.proc %>% filter(TimePeriod == k & str_sub(Stratum, -2, -1) == "LP")
+  obs <- grab.proc %>% filter(TimePeriod == k & str_sub(Stratum, -2, -1) == "LP") %>%
+    filter(Point %in% point.list.LP)
   y <- tapply(obs$CL_Count, obs$Point, sum, na.rm = T)
   Y.LP.trem[names(y), k] <- y
 }
@@ -130,8 +137,10 @@ Cov.LP <- matrix(NA, nrow = length(point.list.LP), ncol = length(cov.names),
                  dimnames = list(point.list.LP, cov.names))
 Cov.LP[, "gridIndex"] <- point.list.LP %>% str_sub(1, -4) %>% as.factor %>% as.integer
 Cov.LP[, "DayOfYear"] <- (grab.proc %>% filter(Stratum == "CO-CPW-LP") %>%
+                            filter(Point %in% point.list.LP) %>%
                             select(Point, DOY) %>% unique %>% arrange(Point))$DOY
 Cov.LP[, "Time"] <- (grab.proc %>% filter(Stratum == "CO-CPW-LP") %>%
+                       filter(Point %in% point.list.LP) %>%
                        select(Point, Time_min) %>% unique %>% arrange(Point))$Time_min
 ind.vals <- which(point.list.LP %in% (cov_tab_import$Point %>% str_sub(8, -1)))
 Cov.LP[ind.vals, -c(1:3)] <- cov_tab_import %>%
@@ -144,12 +153,17 @@ Cov.LP[ind.vals, -c(1:3)] <- cov_tab_import %>%
 # Spruce-fir stratum #
 point.list.SF <- grab.proc$Point[which(str_sub(grab.proc$Point, 1, 2) == "SF")] %>%
   unique %>% sort
+point.list.SF <- point.list.SF[which(point.list.SF %in%
+                                       (cov_tab_import$Point %>%
+                                          str_sub(8, -1)))]
 
-ind.SF <- which(grab.proc$Stratum == "CO-CPW-SF")
+ind.SF <- which(grab.proc$Stratum == "CO-CPW-SF" &
+                  grab.proc$Point %in% point.list.SF)
 Y.SF.dist <- tapply(grab.proc$CL_Count[ind.SF], grab.proc$Point[ind.SF], sum, na.rm = T)
 rm(ind.SF)
 dclass.SF <- grab.proc %>%
   filter(!is.na(grab.proc$CL_Count) & grab.proc$Stratum == "CO-CPW-SF") %>%
+  filter(Point %in% point.list.SF) %>%
   select(CL_Count, dclass, Point) %>%
   mutate(Point = match(Point, names(Y.SF.dist)))
 for(i in 2:max(dclass.SF$CL_Count)) { # Replicate rows representing > 1 individual
@@ -164,7 +178,8 @@ dclass.SF <- dclass.SF %>%
 Y.SF.trem <- matrix(0, nrow = length(point.list.SF), max(grab.proc$TimePeriod, na.rm = T),
                     dimnames = list(point.list.SF, NULL)) # Time removal N-mixture observation matrix
 for(k in 1:max(grab.proc$TimePeriod, na.rm = T)) {
-  obs <- grab.proc %>% filter(TimePeriod == k & str_sub(Stratum, -2, -1) == "SF")
+  obs <- grab.proc %>% filter(TimePeriod == k & str_sub(Stratum, -2, -1) == "SF") %>%
+    filter(Point %in% point.list.SF)
   y <- tapply(obs$CL_Count, obs$Point, sum, na.rm = T)
   Y.SF.trem[names(y), k] <- y
 }
@@ -173,8 +188,10 @@ Cov.SF <- matrix(NA, nrow = length(point.list.SF), ncol = length(cov.names),
                  dimnames = list(point.list.SF, cov.names))
 Cov.SF[, "gridIndex"] <- point.list.SF %>% str_sub(1, -4) %>% as.factor %>% as.integer
 Cov.SF[, "DayOfYear"] <- (grab.proc %>% filter(Stratum == "CO-CPW-SF") %>%
+                            filter(Point %in% point.list.SF) %>%
                             select(Point, DOY) %>% unique %>% arrange(Point))$DOY
 Cov.SF[, "Time"] <- (grab.proc %>% filter(Stratum == "CO-CPW-SF") %>%
+                       filter(Point %in% point.list.SF) %>%
                        select(Point, Time_min) %>% unique %>% arrange(Point))$Time_min
 ind.vals <- which(point.list.SF %in% (cov_tab_import$Point %>% str_sub(8, -1)))
 Cov.SF[ind.vals, -c(1:3)] <- cov_tab_import %>%

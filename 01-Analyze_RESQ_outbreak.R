@@ -10,7 +10,7 @@ load("Data_compiled_RESQ.RData")
 #____________________________________________________ Script inputs _____________________________________________________________#
 stratum <- "LP" # Set stratum (LP or SF)
 maxYSOForPD <- 12 # Set to 12 for LP and 9 for SF
-model.file <- "CPWBeetleKillAnalysis/model_RESQ_outbreak_HZdist_LP.jags"
+model.file <- "CPWBeetleKillAnalysis/model_RESQ_outbreak_HZdist_LP_global.jags"
 
 data <- list("Y",
              "dclass", # needed for distance sampling
@@ -58,7 +58,7 @@ nb <- 5000
 ni <- 20000
 nt <- 10
 
-save.out <- "mod_RESQ_outbreak_HZdist_LP"
+save.out <- "mod_RESQ_outbreak_HZdist_LP_global"
 
 ## For distance sampling ##
 Y <- eval(as.name(str_c("Y.", stratum, ".dist"))) # For distance sampling
@@ -121,6 +121,7 @@ RDens.d <- Cov[, "Rd_dens1km"]  %>% # Grid-level values only
 
 WILD.d <- Cov[, "WILD"]  %>% # Grid-level values only
   tapply(gridID, function(x) (mean(x, na.rm = T) >= 0.5)*1)
+if(any(is.na(WILD.d))) WILD.d[which(is.na(WILD.d))] <- sum(WILD.d, na.rm = T) / sum(!is.na(WILD.d))
 
 RCovAS.b <- Cov[, "RCOV_AS"] %>% # Point-level values
   (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Re-scale point values

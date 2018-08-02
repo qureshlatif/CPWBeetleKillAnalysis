@@ -146,7 +146,8 @@ cov_tab_import <- read.csv("Covariates.csv", header = T, stringsAsFactors = F) %
   rename(WoodyCov = gc_woody) %>%
   rename(DDCov = gc_deadAndDown) %>%
   select(Point, TWIP, DeadConif, YSO, CanCov, RCOV_AS, RCOV_ES, RCOV_Pine, shrub_cover,
-         RCShrb_UD, HerbCov, WoodyCov, DDCov, WILD)
+         RCShrb_UD, HerbCov, WoodyCov, DDCov, WILD) %>%
+  filter(!is.na(TWIP))
 
 cov_tab_import <- cov_tab_import %>%
   left_join(foreign::read.dbf("C:/Users/Quresh.Latif/files/GIS/CPW/Point_coords.dbf", as.is = T) %>%
@@ -159,6 +160,9 @@ cov.names <- c("gridIndex", "DayOfYear", "Time", names(cov_tab_import)[-1])
 # Lodgepole pine stratum #
 point.list.LP <- dat.LP$Point %>%
   unique %>% sort
+point.list.LP <- point.list.LP[which(point.list.LP %in%
+                                       (cov_tab_import$Point %>%
+                                          str_sub(8, -1)))]
 
 for(sp in 1:length(Spp_LP)) {
   dat <- eval(as.name(str_c("detects.", Spp_LP[sp], ".LP")))
@@ -171,10 +175,12 @@ for(sp in 1:length(Spp_LP)) {
                CL_Count = NA) %>%
         unique %>%
         filter(!Point %in% dat$Point)
-    )
+    ) %>%
+    filter(Point %in% point.list.LP)
   Y <- tapply(dat$CL_Count, dat$Point, sum, na.rm = T)
   dclass <- dat %>%
     filter(!is.na(CL_Count)) %>%
+    filter(Point %in% point.list.LP) %>%
     select(CL_Count, dclass, Point) %>%
     mutate(Point = match(Point, names(Y)))
   for(i in 2:max(dclass$CL_Count)) { # Replicate rows representing > 1 individual
@@ -193,8 +199,10 @@ for(sp in 1:length(Spp_LP)) {
 Cov.LP <- matrix(NA, nrow = length(point.list.LP), ncol = length(cov.names),
                  dimnames = list(point.list.LP, cov.names))
 Cov.LP[, "gridIndex"] <- point.list.LP %>% str_sub(1, -4) %>% as.factor %>% as.integer
-Cov.LP[, "DayOfYear"] <- (dat.LP %>% select(Point, DOY) %>% unique %>% arrange(Point))$DOY
-Cov.LP[, "Time"] <- (dat.LP %>% select(Point, Time_min) %>% unique %>% arrange(Point))$Time_min
+Cov.LP[, "DayOfYear"] <- (dat.LP %>% select(Point, DOY) %>%
+                            filter(Point %in% point.list.LP) %>% unique %>% arrange(Point))$DOY
+Cov.LP[, "Time"] <- (dat.LP %>% select(Point, Time_min) %>%
+                       filter(Point %in% point.list.LP) %>% unique %>% arrange(Point))$Time_min
 ind.vals <- which(point.list.LP %in% (cov_tab_import$Point %>% str_sub(8, -1)))
 Cov.LP[ind.vals, -c(1:3)] <- cov_tab_import %>%
   mutate(Point = Point %>% str_sub(8, -1)) %>%
@@ -206,6 +214,9 @@ Cov.LP[ind.vals, -c(1:3)] <- cov_tab_import %>%
 # Spruce-fir stratum #
 point.list.SF <- dat.SF$Point %>%
   unique %>% sort
+point.list.SF <- point.list.SF[which(point.list.SF %in%
+                                       (cov_tab_import$Point %>%
+                                          str_sub(8, -1)))]
 
 for(sp in 1:length(Spp_SF)) {
   dat <- eval(as.name(str_c("detects.", Spp_SF[sp], ".SF")))
@@ -218,10 +229,12 @@ for(sp in 1:length(Spp_SF)) {
                CL_Count = NA) %>%
         unique %>%
         filter(!Point %in% dat$Point)
-    )
+    ) %>%
+    filter(Point %in% point.list.SF) 
   Y <- tapply(dat$CL_Count, dat$Point, sum, na.rm = T)
   dclass <- dat %>%
     filter(!is.na(CL_Count)) %>%
+    filter(Point %in% point.list.SF) %>%
     select(CL_Count, dclass, Point) %>%
     mutate(Point = match(Point, names(Y)))
   for(i in 2:max(dclass$CL_Count)) { # Replicate rows representing > 1 individual
@@ -240,8 +253,10 @@ for(sp in 1:length(Spp_SF)) {
 Cov.SF <- matrix(NA, nrow = length(point.list.SF), ncol = length(cov.names),
                  dimnames = list(point.list.SF, cov.names))
 Cov.SF[, "gridIndex"] <- point.list.SF %>% str_sub(1, -4) %>% as.factor %>% as.integer
-Cov.SF[, "DayOfYear"] <- (dat.SF %>% select(Point, DOY) %>% unique %>% arrange(Point))$DOY
-Cov.SF[, "Time"] <- (dat.SF %>% select(Point, Time_min) %>% unique %>% arrange(Point))$Time_min
+Cov.SF[, "DayOfYear"] <- (dat.SF %>% select(Point, DOY) %>%
+                            filter(Point %in% point.list.SF) %>% unique %>% arrange(Point))$DOY
+Cov.SF[, "Time"] <- (dat.SF %>% select(Point, Time_min) %>%
+                       filter(Point %in% point.list.SF) %>% unique %>% arrange(Point))$Time_min
 ind.vals <- which(point.list.SF %in% (cov_tab_import$Point %>% str_sub(8, -1)))
 Cov.SF[ind.vals, -c(1:3)] <- cov_tab_import %>%
   mutate(Point = Point %>% str_sub(8, -1)) %>%
