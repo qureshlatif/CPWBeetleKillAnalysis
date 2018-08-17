@@ -181,15 +181,9 @@ for(sp in 1:length(Spp_LP)) {
   dclass <- dat %>%
     filter(!is.na(CL_Count)) %>%
     filter(Point %in% point.list.LP) %>%
-    select(CL_Count, dclass, Point) %>%
-    mutate(Point = match(Point, names(Y)))
-  for(i in 2:max(dclass$CL_Count)) { # Replicate rows representing > 1 individual
-    dclass <- dclass %>%
-      bind_rows(dclass %>%
-                  filter(CL_Count == i))
-  }
-  dclass <- dclass %>%
-    select(-CL_Count) %>%
+    select(Point, CL_Count, dclass) %>%
+    mutate(Point = match(Point, names(Y))) %>%
+    rename(Yindex = Point) %>%
     as.matrix()
   
   assign(str_c("Y.", Spp_LP[sp], ".LP.dist"), Y)
@@ -236,14 +230,8 @@ for(sp in 1:length(Spp_SF)) {
     filter(!is.na(CL_Count)) %>%
     filter(Point %in% point.list.SF) %>%
     select(CL_Count, dclass, Point) %>%
-    mutate(Point = match(Point, names(Y)))
-  for(i in 2:max(dclass$CL_Count)) { # Replicate rows representing > 1 individual
-    dclass <- dclass %>%
-      bind_rows(dclass %>%
-                  filter(CL_Count == i))
-  }
-  dclass <- dclass %>%
-    select(-CL_Count) %>%
+    mutate(Point = match(Point, names(Y))) %>%
+    rename(Yindex = Point) %>%
     as.matrix()
   
   assign(str_c("Y.", Spp_SF[sp], ".SF.dist"), Y)

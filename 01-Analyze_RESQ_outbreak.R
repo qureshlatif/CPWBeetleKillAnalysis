@@ -8,39 +8,37 @@ setwd("C:/Users/Quresh.Latif/files/projects/CPW/")
 load("Data_compiled_RESQ.RData")
 
 #____________________________________________________ Script inputs _____________________________________________________________#
-stratum <- "LP" # Set stratum (LP or SF)
-maxYSOForPD <- 12 # Set to 12 for LP and 9 for SF
-model.file <- "CPWBeetleKillAnalysis/model_RESQ_outbreak_HZdist_LP_global.jags"
+stratum <- "SF" # Set stratum (LP or SF)
+maxYSOForPD <- 9 # Set to 12 for LP and 9 for SF
+model.file <- "CPWBeetleKillAnalysis/model_RESQ_outbreak_HZdist_SF_global.jags"
 
 data <- list("Y",
-             "dclass", # needed for distance sampling
+             "dclass", "mean.cl", "sd.cl", # needed for distance sampling
              "gridID", "nGrid", "nPoint",
              #"nInt", # needed for time removal
              "nInd", "nG", "area.band", "area.prop", "breaks", # needed for distance sampling
-             "Time.b", "DOY.b", "ccov.b", #"shcov.b",
+             "Time.b", "DOY.b",
              "PctDead.b", "YSO.b", "YSO.mins", "YSO.maxs", "YSO.missing",
              "PctDead.sd", "PctDead.lower", "PctDead.b.missing",
              "TWIP.d", "RDens.d", "WILD.d",
              "RCovAS.d", "RCovAS.b", "RCovAS.sd", "RCovAS.b.missing", "RCovAS.lower",
-             #"RCovES.d", "RCovES.b", "RCovES.sd", "RCovES.b.missing", "RCovES.lower",
-             "RCovPine.d", "RCovPine.b", "RCovPine.sd", "RCovPine.b.missing", "RCovPine.lower",
-             "ccov.means", "ccov.sd", "ccov.b.missing")#,
-             #"shcov.means", "shcov.sd", "shcov.b.missing") # Inputs for JAGS model.
+             "RCovES.d", "RCovES.b", "RCovES.sd", "RCovES.b.missing", "RCovES.lower",
+             "RCovPine.d", "RCovPine.b", "RCovPine.sd", "RCovPine.b.missing", "RCovPine.lower") # Inputs for JAGS model.
 
 parameters <- c("beta0.mean", "beta0.sd", #"N.mean", "p.mean", # Assemble the parameters vector for JAGS (What we want to track).
-                "beta0", "N",
+                "beta0", "N", "cl.size",
                 "bl.pdead",
                 "bl.YSO",
                 "bl.YSO2",
                 "bl.pdXYSO",
                 "bd.TWIP", "bd.RDens", "bd.WILD",
                 "bl.RCovAS",
-                #"bl.RCovES",
+                "bl.RCovES",
                 "bl.RCovPine",
                 ##___ Hazard rate parameters ___##
-                "a0", "a.Time", #"a.Time2",
+                "a0", "a.Time", "a.Time2",
                 "a.DOY", "a.DOY2",
-                "a.ccov", #"a.shcov",
+                "a.pdead", "a.YSO", "a.YSO2", "a.pdXYSO",
                 "b",
                 ##______________________________##
                 ##___ Half-normal parameters or time removal ___##
@@ -55,14 +53,16 @@ parameters <- c("beta0.mean", "beta0.sd", #"N.mean", "p.mean", # Assemble the pa
 # MCMC values.  Adjust as needed.
 nc <- 3
 nb <- 5000
-ni <- 20000
+ni <- 30000
 nt <- 10
 
-save.out <- "mod_RESQ_outbreak_HZdist_LP_global"
+save.out <- "mod_RESQ_outbreak_HZdist_SF_global"
 
 ## For distance sampling ##
 Y <- eval(as.name(str_c("Y.", stratum, ".dist"))) # For distance sampling
 dclass <- eval(as.name(str_c("dclass.", stratum)))
+mean.cl <- max(1.001, mean(dclass[, "CL_Count"]))
+sd.cl <- max(0.001, sd(dclass[, "CL_Count"]))
 dimnames(dclass) <- NULL
 nInd <- nrow(dclass)
 nPoint <- length(Y)
@@ -121,7 +121,7 @@ RDens.d <- Cov[, "Rd_dens1km"]  %>% # Grid-level values only
 
 WILD.d <- Cov[, "WILD"]  %>% # Grid-level values only
   tapply(gridID, function(x) (mean(x, na.rm = T) >= 0.5)*1)
-if(any(is.na(WILD.d))) WILD.d[which(is.na(WILD.d))] <- sum(WILD.d, na.rm = T) / sum(!is.na(WILD.d))
+
 
 RCovAS.b <- Cov[, "RCOV_AS"] %>% # Point-level values
   (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Re-scale point values
@@ -160,19 +160,6 @@ if(stratum == "LP") Time.b[point.list.LP == "LP-057-06"] <-
   mean(c(Time.b[point.list.LP == "LP-057-07"], Time.b[point.list.LP == "LP-057-03"]))
   # Imputed missing time value in LP data based on survey times for point likely completed just before and just after.
   # Inferred which points after viewing the other points and their associated times in ArcMap.
-
-ccov.b <- Cov[, "CanCov"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
-ccov.means <- tapply(ccov.b, gridID, mean, na.rm = T) # Grid-level means for imputing missing values
-ccov.sd <- tapply(ccov.b, gridID, sd, na.rm = T) # Grid-level SDs for imputing missing values
-ccov.sd[which(ccov.sd == 0)] <- min(ccov.sd[which(ccov.sd > 0)]) # Zeros won't work for SD!
-ccov.b.missing <- is.na(ccov.b) %>% as.integer # Index missing values to be imputed
-ccov.b[is.na(ccov.b)] <- 0
-
-shcov.b <- Cov[, "shrub_cover"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
-shcov.means <- tapply(shcov.b, gridID, mean, na.rm = T) # Grid-level means for imputing missing values
-shcov.sd <- tapply(shcov.b, gridID, sd, na.rm = T) # Grid-level SDs for imputing missing values
-shcov.b.missing <- is.na(shcov.b) %>% as.integer # Index missing values to be imputed
-shcov.b[is.na(shcov.b)] <- 0
 
 # Save workspace for model checking #
 save.image("RESQ_GOF_workspace.RData")

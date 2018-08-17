@@ -1,0 +1,250 @@
+model {
+  
+  # prior distributions
+  
+  # parameter correlation
+  
+  rho.ab ~ dunif(-1,1)
+  rho.bd ~ dunif(-1,1)
+  
+  # mean and precison for the parameter intercepts
+  
+  t.nu <- 7.763179      # Uniform prior
+  t.sigma <- 1.566267   # Uniform prior
+
+  alpha0 ~  dt(0, pow(t.sigma, -2), t.nu)
+  tvar.sigma.a0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.a0 <- abs(tvar.sigma.a0)  # half-Cauchy distribution
+  
+  beta0 ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.sigma.b0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.b0 <- abs(tvar.sigma.b0)  # half-Cauchy distribution
+  
+  delta0 ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.sigma.d0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.d0 <- abs(tvar.sigma.d0)  # half-Cauchy distribution
+  
+  # metacommunity parameter
+  omega ~ dunif(0,1)
+  
+  # covariates for psi (d)
+  Betad.PctDead ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.PctDead ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.PctDead <- abs(tvar.Betad.PctDead) # half-Cauchy distribution
+
+  Betad.TWIP ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.TWIP ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.TWIP <- abs(tvar.Betad.TWIP) # half-Cauchy distribution
+  
+  Betad.RDens ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.RDens ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.RDens <- abs(tvar.Betad.RDens) # half-Cauchy distribution
+  
+  Betad.WILD ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.WILD ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.WILD <- abs(tvar.Betad.WILD) # half-Cauchy distribution
+  
+  Betad.RCovAS ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.RCovAS ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.RCovAS <- abs(tvar.Betad.RCovAS) # half-Cauchy distribution
+
+  Betad.RCovPine ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.RCovPine ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.RCovPine <- abs(tvar.Betad.RCovPine) # half-Cauchy distribution
+
+  Betad.CanCov ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.CanCov ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.CanCov <- abs(tvar.Betad.CanCov) # half-Cauchy distribution
+
+  Betad.ShCov ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.ShCov ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.ShCov <- abs(tvar.Betad.ShCov) # half-Cauchy distribution
+
+  Betad.RSC_Con ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.RSC_Con ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.RSC_Con <- abs(tvar.Betad.RSC_Con) # half-Cauchy distribution
+
+  Betad.GHerb ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.GHerb ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.GHerb <- abs(tvar.Betad.GHerb) # half-Cauchy distribution
+
+  Betad.Gwoody ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.Gwoody ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.Gwoody <- abs(tvar.Betad.Gwoody) # half-Cauchy distribution
+
+  Betad.GDD ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.GDD ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.GDD <- abs(tvar.Betad.GDD) # half-Cauchy distribution
+
+  Betad.RESQ ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.RESQ ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.RESQ <- abs(tvar.Betad.RESQ) # half-Cauchy distribution
+
+  # covariates for theta (b)
+  Betab.PctDead ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.PctDead ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.PctDead <- abs(tvar.Betab.PctDead) # half-Cauchy distribution
+
+  Betab.RCovAS ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.RCovAS ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.RCovAS <- abs(tvar.Betab.RCovAS) # half-Cauchy distribution
+
+  Betab.RCovPine ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.RCovPine ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.RCovPine <- abs(tvar.Betab.RCovPine) # half-Cauchy distribution
+
+  Betab.CanCov ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.CanCov ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.CanCov <- abs(tvar.Betab.CanCov) # half-Cauchy distribution
+
+  Betab.ShCov ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.ShCov ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.ShCov <- abs(tvar.Betab.ShCov) # half-Cauchy distribution
+
+  Betab.RSC_Con ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.RSC_Con ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.RSC_Con <- abs(tvar.Betab.RSC_Con) # half-Cauchy distribution
+
+  Betab.GHerb ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.GHerb ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.GHerb <- abs(tvar.Betab.GHerb) # half-Cauchy distribution
+
+  Betab.Gwoody ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.Gwoody ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.Gwoody <- abs(tvar.Betab.Gwoody) # half-Cauchy distribution
+
+  Betab.GDD ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.GDD ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.GDD <- abs(tvar.Betab.GDD) # half-Cauchy distribution
+
+  Betab.RESQ ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.RESQ ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.RESQ <- abs(tvar.Betab.RESQ) # half-Cauchy distribution
+
+  # covariates for p (a)
+  Betaa.Time ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betaa.Time ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betaa.Time <- abs(tvar.Betaa.Time) # half-Cauchy distribution
+
+  Betaa.Time2 ~ dt(0, pow(t.sigma, -2), t.nu) # Possibly drop quadratics here.
+  tvar.Betaa.Time2 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betaa.Time2 <- abs(tvar.Betaa.Time2) # half-Cauchy distribution
+
+  Betaa.DOY ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betaa.DOY ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betaa.DOY <- abs(tvar.Betaa.DOY) # half-Cauchy distribution
+
+  Betaa.DOY2 ~ dt(0, pow(t.sigma,-2), t.nu)
+  tvar.Betaa.DOY2 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betaa.DOY2 <- abs(tvar.Betaa.DOY2) # half-Cauchy distribution
+
+  Betaa.CCov ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betaa.CCov ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betaa.CCov <- abs(tvar.Betaa.CCov) # half-Cauchy distribution
+
+  Betaa.SHCov ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betaa.SHCov ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betaa.SHCov <- abs(tvar.Betaa.SHCov) # half-Cauchy distribution
+
+  # Impute missing data
+  for(j in 1:n.point) {
+    PctDead.b.imp[j] ~ dnorm(PctDead.b[j], pow(PctDead.sd[j], -2))T(PctDead.lower,)
+    pdead[j] <- PctDead.b[j]*(1-PctDead.b.missing[j]) + PctDead.b.imp[j]*PctDead.b.missing[j]
+    ccov.b.imp[j] ~ dnorm(ccov.d[gridID[j]], pow(ccov.sd[gridID[j]], -2))
+    ccov[j] <- ccov.b[j]*(1 - ccov.b.missing[j]) + ccov.b.imp[j]*ccov.b.missing[j]
+    shcov.b.imp[j] ~ dnorm(shcov.d[gridID[j]], pow(shcov.sd[gridID[j]], -2))
+    shcov[j] <- shcov.b[j]*(1 - shcov.b.missing[j]) + shcov.b.imp[j]*shcov.b.missing[j]
+    RCovAS.b.imp[j] ~ dnorm(RCovAS.d[gridID[j]], pow(RCovAS.sd[gridID[j]], -2))T(RCovAS.lower,)
+    RCovAS[j] <- RCovAS.b[j]*(1 - RCovAS.b.missing[j]) + RCovAS.b.imp[j]*RCovAS.b.missing[j]
+    RCovPine.b.imp[j] ~ dnorm(RCovPine.d[gridID[j]], pow(RCovPine.sd[gridID[j]], -2))T(RCovPine.lower,)
+    RCovPine[j] <- RCovPine.b[j]*(1 - RCovPine.b.missing[j]) + RCovPine.b.imp[j]*RCovPine.b.missing[j]
+    RSC_Con.b.imp[j] ~ dnorm(RSC_Con.d[gridID[j]], pow(RSC_Con.sd[gridID[j]], -2))
+    RSC_Con[j] <- ccov.b[j]*(1 - RSC_Con.b.missing[j]) + RSC_Con.b.imp[j]*RSC_Con.b.missing[j]
+    GHerb.b.imp[j] ~ dnorm(GHerb.d[gridID[j]], pow(GHerb.sd[gridID[j]], -2))
+    GHerb[j] <- GHerb.b[j]*(1 - GHerb.b.missing[j]) + GHerb.b.imp[j]*ccov.b.missing[j]
+    Gwoody.b.imp[j] ~ dnorm(Gwoody.d[gridID[j]], pow(Gwoody.sd[gridID[j]], -2))
+    Gwoody[j] <- Gwoody.b[j]*(1 - Gwoody.b.missing[j]) + Gwoody.b.imp[j]*Gwoody.b.missing[j]
+    GDD.b.imp[j] ~ dnorm(GDD.d[gridID[j]], pow(GDD.sd[gridID[j]], -2))
+    GDD[j] <- GDD.b[j]*(1 - GDD.b.missing[j]) + GDD.b.imp[j]*ccov.b.missing[j]
+  }
+  
+  # Draw index for RESQ abundance posterior sample #
+  ind.RESQ ~ dcat(RESQ.wts)
+  
+  for (i in 1:n.spp) {
+    d0[i] ~ dnorm(delta0, pow(sigma.d0,-2))
+    b0[i] ~ dnorm(beta0 + (rho.bd*sigma.b0/sigma.d0)*(d0[i] - delta0),  pow(sigma.b0,-2)/(1 - pow(rho.bd,2)))
+    a0[i] ~ dnorm(alpha0 + (rho.ab*sigma.a0/sigma.b0)*(b0[i] - beta0),  pow(sigma.a0,-2)/(1 - pow(rho.ab,2)))
+
+    # covariates for psi (d)
+    bd.pdead[i] ~ dnorm(Betad.PctDead, pow(sigma.Betad.PctDead, -2))
+    bd.TWIP[i] ~ dnorm(Betad.TWIP, pow(sigma.Betad.TWIP, -2))
+    bd.RDens[i] ~ dnorm(Betad.RDens, pow(sigma.Betad.RDens, -2))
+    bd.WILD[i] ~ dnorm(Betad.WILD, pow(sigma.Betad.WILD, -2))
+    bd.RCovAS[i] ~ dnorm(Betad.RCovAS, pow(sigma.Betad.RCovAS, -2))
+    bd.RCovPine[i] ~ dnorm(Betad.RCovPine, pow(sigma.Betad.RCovPine, -2))
+    bd.CanCov[i] ~ dnorm(Betad.CanCov, pow(sigma.Betad.CanCov, -2))
+    bd.ShCov[i] ~ dnorm(Betad.ShCov, pow(sigma.Betad.ShCov, -2))
+    bd.RSC_Con[i] ~ dnorm(Betad.RSC_Con, pow(sigma.Betad.RSC_Con, -2))
+    bd.GHerb[i] ~ dnorm(Betad.GHerb, pow(sigma.Betad.GHerb, -2))
+    bd.Gwoody[i] ~ dnorm(Betad.Gwoody, pow(sigma.Betad.Gwoody, -2))
+    bd.GDD[i] ~ dnorm(Betad.GDD, pow(sigma.Betad.GDD, -2))
+    bd.RESQ[i] ~ dnorm(Betad.RESQ, pow(sigma.Betad.RESQ, -2))
+
+    # covariates for theta (b)
+    bb.pdead[i] ~ dnorm(Betab.PctDead, pow(sigma.Betab.PctDead, -2))
+    bb.RCovAS[i] ~ dnorm(Betab.RCovAS, pow(sigma.Betab.RCovAS, -2))
+    bb.RCovPine[i] ~ dnorm(Betab.RCovPine, pow(sigma.Betab.RCovPine, -2))
+    bb.CanCov[i] ~ dnorm(Betab.CanCov, pow(sigma.Betab.CanCov, -2))
+    bb.ShCov[i] ~ dnorm(Betab.ShCov, pow(sigma.Betab.ShCov, -2))
+    bb.RSC_Con[i] ~ dnorm(Betab.RSC_Con, pow(sigma.Betab.RSC_Con, -2))
+    bb.GHerb[i] ~ dnorm(Betab.GHerb, pow(sigma.Betab.GHerb, -2))
+    bb.Gwoody[i] ~ dnorm(Betab.Gwoody, pow(sigma.Betab.Gwoody, -2))
+    bb.GDD[i] ~ dnorm(Betab.GDD, pow(sigma.Betab.GDD, -2))
+    bb.RESQ[i] ~ dnorm(Betab.RESQ, pow(sigma.Betab.RESQ, -2))
+
+    # covariates for p (a)
+    ba.Time[i] ~ dnorm(Betaa.Time, pow(sigma.Betaa.Time, -2))
+    ba.Time2[i] ~ dnorm(Betaa.Time2, pow(sigma.Betaa.Time2, -2))
+    ba.DOY[i] ~ dnorm(Betaa.DOY, pow(sigma.Betaa.DOY, -2))
+    ba.DOY2[i] ~ dnorm(Betaa.DOY2, pow(sigma.Betaa.DOY2, -2))
+    ba.ccov[i] ~ dnorm(Betaa.CCov, pow(sigma.Betaa.CCov, -2))
+    ba.shcov[i] ~ dnorm(Betaa.SHCov, pow(sigma.Betaa.SHCov, -2))
+
+    # state processes
+    w[i] ~ dbern(omega)
+    for (k in 1:n.grid) {
+      logit(psi[k, i]) <- d0[i] + bd.pdead[i]*PctDead.d[k] +
+        bd.TWIP[i]*TWIP.d[k] + bd.RDens[i]*RDens.d[k] + bd.WILD[i]*WILD.d[k] +
+        bd.RCovAS[i]*RCovAS.d[k] + bd.RCovPine[i]*RCovPine.d[k] +
+        bd.CanCov[i]*ccov.d[k] + bd.ShCov[i]*shcov.d[k] +
+        bd.RSC_Con[i]*RSC_Con.d[k] + bd.GHerb[i]*GHerb.d[k] +
+        bd.Gwoody[i]*Gwoody.d[k] + bd.GDD[i]*GDD.d[k] +
+        bd.RESQ[i]*RESQ.d[ind.RESQ, k]
+      z[k, i] ~ dbern(psi[k, i]*w[i])
+    }
+
+    for(j in 1:n.point) {
+      logit(theta[j, i]) <- b0[i] + bb.pdead[i]*pdead[j] +
+        bb.RCovAS[i]*RCovAS[j] + bb.RCovPine[i]*RCovPine[j] +
+        bb.CanCov[i]*ccov[j] + bb.ShCov[i]*shcov[j] +
+        bb.RSC_Con[i]*RSC_Con[j] + bb.GHerb[i]*GHerb[j] +
+        bb.Gwoody[i]*Gwoody[j] + bb.GDD[i]*GDD[j] +
+        bb.RESQ[i]*RESQ.b[ind.RESQ, j]
+      u[j, i] ~ dbern(theta[j, i]*z[gridID[j], i])
+      
+      logit(p[j, i]) <- a0[i] + ba.Time[i]*Time.b[j] + ba.Time2[i]*pow(Time.b[j], 2) +
+        ba.DOY[i]*DOY.b[j] + ba.DOY2[i]*pow(DOY.b[j], 2) + ba.ccov[i]*ccov[j] + ba.shcov[i]*shcov[j]
+      Y[j, i] ~ dbinom(p[j, i]*u[j, i], TPeriod[j, i])
+    }
+  }
+  
+  # Derive species richness at both scales #
+  for(k in 1:n.grid) {
+    SR.grid[k] <- sum(z[k, ])
+  }
+
+  for(j in 1:n.point) {
+    SR.point[j] <- sum(u[j, ])
+  }
+}

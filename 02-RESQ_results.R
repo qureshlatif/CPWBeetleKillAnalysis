@@ -11,7 +11,7 @@ setwd("C:/Users/Quresh.Latif/files/projects/CPW/")
 load("Data_compiled_RESQ.RData")
 
 #___ Inputs ___#
-mod <- loadObject("mod_RESQ_outbreak_HZdist_LP_global")
+mod <- loadObject("mod_RESQ_outbreak_HZdist_SF_reduced")
 pars <- c("beta0.mean", "beta0.sd", "bl.pdead", # Parameters of interest
           "bl.YSO", "bl.YSO2", "bl.pdXYSO",
           "bl.RCovAS", "bl.RCovES", "bl.RCovPine",

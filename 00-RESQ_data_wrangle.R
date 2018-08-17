@@ -113,15 +113,8 @@ rm(ind.LP)
 dclass.LP <- grab.proc %>%
   filter(!is.na(grab.proc$CL_Count) & grab.proc$Stratum == "CO-CPW-LP") %>%
   filter(Point %in% point.list.LP) %>%
-  select(CL_Count, dclass, Point) %>%
-  mutate(Point = match(Point, names(Y.LP.dist)))
-for(i in 2:max(dclass.LP$CL_Count)) { # Replicate rows representing > 1 individual
-  dclass.LP <- dclass.LP %>%
-    bind_rows(dclass.LP %>%
-                filter(CL_Count == i))
-}
-dclass.LP <- dclass.LP %>%
-  select(-CL_Count) %>%
+  mutate(PntInd = match(Point, names(Y.LP.dist))) %>%
+  select(PntInd, CL_Count, dclass) %>%
   as.matrix()
 
 Y.LP.trem <- matrix(0, nrow = length(point.list.LP), max(grab.proc$TimePeriod, na.rm = T),
@@ -164,15 +157,8 @@ rm(ind.SF)
 dclass.SF <- grab.proc %>%
   filter(!is.na(grab.proc$CL_Count) & grab.proc$Stratum == "CO-CPW-SF") %>%
   filter(Point %in% point.list.SF) %>%
-  select(CL_Count, dclass, Point) %>%
-  mutate(Point = match(Point, names(Y.SF.dist)))
-for(i in 2:max(dclass.SF$CL_Count)) { # Replicate rows representing > 1 individual
-  dclass.SF <- dclass.SF %>%
-    bind_rows(dclass.SF %>%
-                filter(CL_Count == i))
-}
-dclass.SF <- dclass.SF %>%
-  select(-CL_Count) %>%
+  mutate(PntInd = match(Point, names(Y.SF.dist))) %>%
+  select(PntInd, CL_Count, dclass) %>%
   as.matrix()
 
 Y.SF.trem <- matrix(0, nrow = length(point.list.SF), max(grab.proc$TimePeriod, na.rm = T),
@@ -202,5 +188,5 @@ Cov.SF[ind.vals, -c(1:3)] <- cov_tab_import %>%
   as.matrix
 Cov.SF[which(Cov.SF[, "DeadConif"] == 1.25), "DeadConif"] <- 1 # correct DeadConif > 1
 
-rm(ind.vals, obs, k, y, i)
+rm(ind.vals, obs, k, y)
 save.image("Data_compiled_RESQ.RData")

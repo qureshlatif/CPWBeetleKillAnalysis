@@ -106,13 +106,21 @@ model {
   tvar.Betaa.DOY2 ~ dt(0,1,1)  # Cauchy distribution
   sigma.Betaa.DOY2 <- abs(tvar.Betaa.DOY2) # half-Cauchy distribution
 
-  Betaa.CCov ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betaa.CCov ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betaa.CCov <- abs(tvar.Betaa.CCov) # half-Cauchy distribution
+  Betaa.PctDead ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betaa.PctDead ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betaa.PctDead <- abs(tvar.Betaa.PctDead) # half-Cauchy distribution
 
-  Betaa.SHCov ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betaa.SHCov ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betaa.SHCov <- abs(tvar.Betaa.SHCov) # half-Cauchy distribution
+  Betaa.YSO ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betaa.YSO ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betaa.YSO <- abs(tvar.Betaa.YSO) # half-Cauchy distribution
+  
+  Betaa.YSO2 ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betaa.YSO2 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betaa.YSO2 <- abs(tvar.Betaa.YSO2) # half-Cauchy distribution
+  
+  Betaa.PctDdXYSO ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betaa.PctDdXYSO ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betaa.PctDdXYSO <- abs(tvar.Betaa.PctDdXYSO) # half-Cauchy distribution
 
   # Impute missing data
   for(j in 1:n.point) {
@@ -120,10 +128,6 @@ model {
     pdead[j] <- PctDead.b[j]*(1-PctDead.b.missing[j]) + PctDead.b.imp[j]*PctDead.b.missing[j]
     YSO.b.imp[j] ~ dunif(YSO.mins[gridID[j]], YSO.maxs[gridID[j]])
     yso[j] <- YSO.b[j]*(1 - YSO.missing[j]) + YSO.b.imp[j]*YSO.missing[j]
-    ccov.b.imp[j] ~ dnorm(ccov.means[gridID[j]], pow(ccov.sd[gridID[j]], -2))
-    ccov[j] <- ccov.b[j]*(1 - ccov.b.missing[j]) + ccov.b.imp[j]*ccov.b.missing[j]
-    shcov.b.imp[j] ~ dnorm(shcov.means[gridID[j]], pow(shcov.sd[gridID[j]], -2))
-    shcov[j] <- shcov.b[j]*(1 - shcov.b.missing[j]) + shcov.b.imp[j]*shcov.b.missing[j]
     RCovAS.b.imp[j] ~ dnorm(RCovAS.d[gridID[j]], pow(RCovAS.sd[gridID[j]], -2))T(RCovAS.lower,)
     RCovAS[j] <- RCovAS.b[j]*(1 - RCovAS.b.missing[j]) + RCovAS.b.imp[j]*RCovAS.b.missing[j]
     RCovES.b.imp[j] ~ dnorm(RCovES.d[gridID[j]], pow(RCovES.sd[gridID[j]], -2))T(RCovES.lower,)
@@ -161,8 +165,10 @@ model {
     ba.Time2[i] ~ dnorm(Betaa.Time2, pow(sigma.Betaa.Time2, -2))
     ba.DOY[i] ~ dnorm(Betaa.DOY, pow(sigma.Betaa.DOY, -2))
     ba.DOY2[i] ~ dnorm(Betaa.DOY2, pow(sigma.Betaa.DOY2, -2))
-    ba.ccov[i] ~ dnorm(Betaa.CCov, pow(sigma.Betaa.CCov, -2))
-    ba.shcov[i] ~ dnorm(Betaa.SHCov, pow(sigma.Betaa.SHCov, -2))
+    ba.pdead[i] ~ dnorm(Betab.PctDead, pow(sigma.Betab.PctDead, -2))
+    ba.YSO[i] ~ dnorm(Betaa.YSO, pow(sigma.Betaa.YSO, -2))
+    ba.YSO2[i] ~ dnorm(Betaa.YSO2, pow(sigma.Betaa.YSO2, -2))
+    ba.pdXYSO[i] ~ dnorm(Betaa.PctDdXYSO, pow(sigma.Betaa.PctDdXYSO, -2))
 
     # state processes
     w[i] ~ dbern(omega)
@@ -179,7 +185,8 @@ model {
       u[j, i] ~ dbern(theta[j, i]*z[gridID[j], i])
       
       logit(p[j, i]) <- a0[i] + ba.Time[i]*Time.b[j] + ba.Time2[i]*pow(Time.b[j], 2) +
-        ba.DOY[i]*DOY.b[j] + ba.DOY2[i]*pow(DOY.b[j], 2) + ba.ccov[i]*ccov[j] + ba.shcov[i]*shcov[j]
+        ba.DOY[i]*DOY.b[j] + ba.DOY2[i]*pow(DOY.b[j], 2) + ba.pdead[i]*pdead[j] +
+        ba.YSO[i]*yso[j] + ba.YSO2[i]*pow(yso[j], 2) + ba.pdXYSO[i]*pdead[j]*yso[j]
       Y[j, i] ~ dbinom(p[j, i]*u[j, i], TPeriod[j, i])
     }
   }
