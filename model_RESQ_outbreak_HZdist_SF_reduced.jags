@@ -11,8 +11,9 @@
       a0 ~ dnorm(0, 0.1)
       a.Time ~ dnorm(0, 0.1)
       a.DOY ~ dnorm(0, 0.1)
-      a.ccov ~ dnorm(0, 0.1)
-      a.shcov ~ dnorm(0, 0.1)
+      a.pdead ~ dnorm(0, 0.1)
+      a.YSO ~ dnorm(0, 0.1)
+      a.pdXYSO ~ dnorm(0, 0.1)
       b ~ dunif(0, 100)
 
       # Priors on psi and lambda
@@ -40,10 +41,6 @@
         yso[j] <- YSO.b[j]*(1 - YSO.missing[j]) + YSO.b.imp[j]*YSO.missing[j]
         PctDead.b.imp[j] ~ dnorm(PctDead.b[j], pow(PctDead.sd[j], -2))T(PctDead.lower,)
         pdead[j] <- PctDead.b[j]*(1-PctDead.b.missing[j]) + PctDead.b.imp[j]*PctDead.b.missing[j]
-        ccov.b.imp[j] ~ dnorm(ccov.means[gridID[j]], pow(ccov.sd[gridID[j]], -2))
-        ccov[j] <- ccov.b[j]*(1 - ccov.b.missing[j]) + ccov.b.imp[j]*ccov.b.missing[j]
-        shcov.b.imp[j] ~ dnorm(shcov.means[gridID[j]], pow(shcov.sd[gridID[j]], -2))
-        shcov[j] <- shcov.b[j]*(1 - shcov.b.missing[j]) + shcov.b.imp[j]*shcov.b.missing[j]
       }
 
       ### Point-level loop
@@ -66,7 +63,7 @@
         
         ## Detection parameters
         log(a[j]) <- a0 + a.Time*Time.b[j] + a.DOY*DOY.b[j] + # Add detection covariates here.
-          a.ccov*ccov[j] + a.shcov*shcov[j]
+          a.pdead*pdead[j] + a.YSO*yso[j] + a.pdXYSO*pdead[j]*yso[j]
         for(k in 1:nG) {
           p[j, k] <- 1 - exp(-pow(((breaks[k] + breaks[k + 1]) / 2) / a[j], -b))
           pi[j, k] <- p[j, k] * area.prop[k]

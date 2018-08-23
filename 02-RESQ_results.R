@@ -16,8 +16,9 @@ pars <- c("beta0.mean", "beta0.sd", "bl.pdead", # Parameters of interest
           "bl.YSO", "bl.YSO2", "bl.pdXYSO",
           "bl.RCovAS", "bl.RCovES", "bl.RCovPine",
           "bd.TWIP", "bd.RDens", "bd.WILD",
-          "a0", "b", "a.Time", "a.DOY", "a.DOY2",
-          "a.ccov", "a.shcov", "bt.0", "bt.Time", "bt.Time2", "bt.DOY",
+          "a0", "b", "a.Time", "a.Time2", "a.DOY", "a.DOY2",
+          "a.pdead", "a.YSO", "a.YSO2", "a.pdXYSO",
+          "bt.0", "bt.Time", "bt.Time2", "bt.DOY",
           "bt.DOY2", "bt.ccov", "bt.shcov")
 tab.out <- "Param_summ_RESQ.csv"
 #______________#
