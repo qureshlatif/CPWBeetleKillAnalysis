@@ -8,27 +8,30 @@ load("Data_compiled.RData")
 
 #__________ Script inputs _____________#
 stratum <- "LP" # Select LP or SF
-mod <- loadObject("mod_LPcommunity_outbreak_QuadAtPnt (marg converge)")
+mod <- loadObject("mod_LPcommunity_outbreak_global")
 params <- c("bd.pdead",
-            #"bd.pdead2",
-            "bd.outbrk",
             "bd.YSO",
-            #"bd.YSO2",
-            #"bd.pdXYSO",
             "bd.TWIP",
+            "bd.RDens",
+            "bd.WILD",
+            "bd.RCovAS",
+            "bd.RCovES",
+            "bd.RCovPine",
             "bb.pdead",
-            "bb.pdead2",
-            "bb.outbrk",
             "bb.YSO",
             "bb.YSO2",
-            #"bb.pdXYSO",
-            "bb.TWIP",
+            "bb.pdXYSO",
+            "bb.RCovAS",
+            "bb.RCovES",
+            "bb.RCovPine",
             "ba.Time",
             "ba.Time2",
             "ba.DOY",
             "ba.DOY2",
-            "ba.ccov",
-            "ba.shcov")
+            "ba.pdead",
+            "ba.YSO",
+            "ba.YSO2",
+            "ba.pdXYSO")
 out.vals <- c("est", "f")
 #______________________________________#
 
@@ -40,15 +43,17 @@ out <- matrix(NA, nrow = length(spp.list), ncol = length(cols),
 
 for(i in 1:length(params)) {
   parm <- mod$sims.list[[params[i]]]
-  out[, (i*2 - 1)] <- str_c(
-    apply(parm, 2, median) %>% round(digits = 2),
-    "(",
-    apply(parm, 2, function(x) quantile(x, prob = 0.025, type = 8)) %>% round(digits = 2),
-    ",",
-    apply(parm, 2, function(x) quantile(x, prob = 0.975, type = 8)) %>% round(digits = 2),
-    ")")
-  out[, (i*2)] <- apply(parm, 2, function(x) max(c(sum(x > 0), sum(x < 0))) / length(x)) %>%
-    round(digits = 2)
+  if(!is.null(parm)) {
+    out[, (i*2 - 1)] <- str_c(
+      apply(parm, 2, median) %>% round(digits = 2),
+      "(",
+      apply(parm, 2, function(x) quantile(x, prob = 0.025, type = 8)) %>% round(digits = 2),
+      ",",
+      apply(parm, 2, function(x) quantile(x, prob = 0.975, type = 8)) %>% round(digits = 2),
+      ")")
+    out[, (i*2)] <- apply(parm, 2, function(x) max(c(sum(x > 0), sum(x < 0))) / length(x)) %>%
+      round(digits = 2)
+  }
 }
 
 write.csv(out, "Parameter_est.csv", row.names = T)

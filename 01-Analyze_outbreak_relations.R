@@ -6,10 +6,20 @@ library(dplyr)
 setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 load("Data_compiled.RData")
 
-#### Script inputs ####
+#________ Script inputs________#
 stratum <- "SF"
 maxYSOForPD <- 9 # Set to 12 for LP and 9 for SF
-model.file <- "CPWBeetleKillAnalysis/model_outbreak_SF.jags"
+model.file <- "CPWBeetleKillAnalysis/model_outbreak_SF_reduced.jags"
+
+# MCMC values
+nc <- 3 # number of chains
+nb <- 10000 # burn in
+ni <- 100000 # number of iterations
+nt <- 10 # thinning
+
+save.out <- "mod_SFcommunity_outbreak"
+#______________________________#
+
 
 # Data objects to send to JAGS
 data <- list("Y", "TPeriod", "gridID", "n.grid", "n.point", "n.spp", "PctDead.b",
@@ -60,15 +70,6 @@ inits <- function()
        tvar.Betaa.DOY = rnorm(1), tvar.Betaa.DOY2 = rnorm(1),
        tvar.Betaa.PctDead = rnorm(1), tvar.Betaa.YSO = rnorm(1),
        tvar.Betaa.YSO2 = rnorm(1), tvar.Betaa.PctDdXYSO = rnorm(1))
-
-# MCMC values
-nc <- 3 # number of chains
-nb <- 10000 # burn in
-ni <- 100000 # number of iterations
-nt <- 10 # thinning
-
-save.out <- "mod_SFcommunity_outbreak"
-##########################
 
 # Detection data #
 Y <- str_c("Y.", stratum) %>% as.name %>% eval
