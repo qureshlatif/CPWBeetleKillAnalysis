@@ -7,8 +7,8 @@ setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 load("Data_compiled.RData")
 
 #__________ Script inputs _____________#
-stratum <- "LP" # Select LP or SF
-mod <- loadObject("mod_LPcommunity_outbreak_global")
+stratum <- "SF" # Select LP or SF
+mod <- loadObject("mod_SFcommunity_outbreak_reduced")
 params <- c("bd.pdead",
             "bd.YSO",
             "bd.TWIP",
@@ -33,6 +33,7 @@ params <- c("bd.pdead",
             "ba.YSO2",
             "ba.pdXYSO")
 out.vals <- c("est", "f")
+params <- params[which(params %in% names(mod$sims.list))]
 #______________________________________#
 
 cols <- (expand.grid(out.vals, params, stringsAsFactors = F) %>%
