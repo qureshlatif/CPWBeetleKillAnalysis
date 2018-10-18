@@ -8,7 +8,7 @@ load("Data_compiled.RData")
 
 #__________ Script inputs _____________#
 stratum <- "SF" # Select LP or SF
-mod <- loadObject("mod_SFcommunity_outbreak_reduced")
+mod <- loadObject("mod_SFcommunity_outbreak_reduced2")
 params <- c("bd.pdead",
             "bd.YSO",
             "bd.TWIP",

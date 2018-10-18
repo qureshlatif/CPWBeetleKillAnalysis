@@ -10,7 +10,16 @@ load("Data_compiled_RESQ.RData")
 #____________________________________________________ Script inputs _____________________________________________________________#
 stratum <- "SF" # Set stratum (LP or SF)
 maxYSOForPD <- 9 # Set to 12 for LP and 9 for SF
-model.file <- "CPWBeetleKillAnalysis/model_RESQ_outbreak_HZdist_SF_global.jags"
+model.file <- "CPWBeetleKillAnalysis/model_RESQ_outbreak_HZdist_SF_reduced.jags"
+
+# MCMC values.  Adjust as needed.
+nc <- 3
+nb <- 5000
+ni <- 40000
+nt <- 10
+
+save.out <- "mod_RESQ_outbreak_HZdist_SF_reduced"
+#________________________________________________________________________________________________________________________________#
 
 data <- list("Y",
              "dclass", "mean.cl", "sd.cl", # needed for distance sampling
@@ -20,21 +29,16 @@ data <- list("Y",
              "Time.b", "DOY.b",
              "PctDead.b", "YSO.b", "YSO.mins", "YSO.maxs", "YSO.missing",
              "PctDead.sd", "PctDead.lower", "PctDead.b.missing",
-             "TWIP.d", "RDens.d", "WILD.d",
+             "heatload.d", "TWI.d", "TWIP.d", "RDens.d", "WILD.d",
              "RCovAS.d", "RCovAS.b", "RCovAS.sd", "RCovAS.b.missing", "RCovAS.lower",
              "RCovES.d", "RCovES.b", "RCovES.sd", "RCovES.b.missing", "RCovES.lower",
              "RCovPine.d", "RCovPine.b", "RCovPine.sd", "RCovPine.b.missing", "RCovPine.lower") # Inputs for JAGS model.
 
-parameters <- c("beta0.mean", "beta0.sd", #"N.mean", "p.mean", # Assemble the parameters vector for JAGS (What we want to track).
+parameters <- c("beta0.mean", "beta0.sd", "N.mean", "p.mean", # Assemble the parameters vector for JAGS (What we want to track).
                 "beta0", "N", "cl.size",
-                "bl.pdead",
-                "bl.YSO",
-                "bl.YSO2",
-                "bl.pdXYSO",
-                "bd.TWIP", "bd.RDens", "bd.WILD",
-                "bl.RCovAS",
-                "bl.RCovES",
-                "bl.RCovPine",
+                "bd.heatload", "bd.TWI", "bd.TWIP", "bd.RDens", "bd.WILD",
+                "bl.pdead", "bl.YSO", "bl.YSO2", "bl.pdXYSO",
+                "bl.RCovAS", "bl.RCovES", "bl.RCovPine",
                 ##___ Hazard rate parameters ___##
                 "a0", "a.Time", "a.Time2",
                 "a.DOY", "a.DOY2",
@@ -42,21 +46,13 @@ parameters <- c("beta0.mean", "beta0.sd", #"N.mean", "p.mean", # Assemble the pa
                 "b",
                 ##______________________________##
                 ##___ Half-normal parameters or time removal ___##
-                #"bt.Int", # Time removal only - linear effect of minutes elapsed
-                #"bt.0", "bt.Time", "bt.Time2",
-                #"bt.DOY", "bt.DOY2",
-                #"bt.ccov", "bt.shcov",
+                "bt.Int", # Time removal only - linear effect of minutes elapsed
+                "bt.0", "bt.Time", "bt.Time2",
+                "bt.DOY", "bt.DOY2",
+                "bt.ccov", "bt.shcov",
                 ##______________________________##
                 "lambda", "a", # Needed for WAIC
                 "test") # GOF
-
-# MCMC values.  Adjust as needed.
-nc <- 3
-nb <- 5000
-ni <- 30000
-nt <- 10
-
-save.out <- "mod_RESQ_outbreak_HZdist_SF_global"
 
 ## For distance sampling ##
 Y <- eval(as.name(str_c("Y.", stratum, ".dist"))) # For distance sampling
@@ -110,6 +106,14 @@ YSO.maxs[ind] <- YSO.maxs[ind] + 0.01
 rm(ind)
 YSO.missing <- (is.na(YSO.b) & outbreak_grids[gridID]) %>% as.integer
 YSO.b[is.na(YSO.b)] <- 0
+
+heatload.d <- Cov[, "heatload"]  %>% # Grid-level values only
+  tapply(gridID, mean, na.rm = T) %>%
+  (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T))
+
+TWI.d <- Cov[, "TWI"]  %>% # Grid-level values only
+  tapply(gridID, mean, na.rm = T) %>%
+  (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T))
 
 TWIP.d <- Cov[, "TWIP"]  %>% # Grid-level values only
   tapply(gridID, mean, na.rm = T) %>%

@@ -19,7 +19,7 @@ Spp_SF <- c("ATTW", "RBNU", "MOCH", "WEWP", "CLNU", "RECR", "PISI", "WAVI",
 ###################
 
 # Data grab #
-BCRDataAPI::set_api_server('192.168.137.180')
+BCRDataAPI::set_api_server('analysis.api.birdconservancy.org')
 
 BCRDataAPI::reset_api()
 BCRDataAPI::add_columns(c('TransectNum|str',

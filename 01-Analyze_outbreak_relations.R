@@ -7,9 +7,9 @@ setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 load("Data_compiled.RData")
 
 #________ Script inputs________#
-stratum <- "SF"
-maxYSOForPD <- 9 # Set to 12 for LP and 9 for SF
-model.file <- "CPWBeetleKillAnalysis/model_outbreak_SF_reduced.jags"
+stratum <- "LP"
+maxYSOForPD <- 12 # Set to 12 for LP and 9 for SF
+model.file <- "CPWBeetleKillAnalysis/model_outbreak_LP_reduced.jags"
 
 # MCMC values
 nc <- 3 # number of chains
@@ -25,7 +25,7 @@ save.out <- "mod_SFcommunity_outbreak"
 data <- list("Y", "TPeriod", "gridID", "n.grid", "n.point", "n.spp", "PctDead.b",
              "PctDead.d", "PctDead.sd", "PctDead.lower", "PctDead.b.missing",
              "YSO.b", "YSO.mins", "YSO.maxs", "YSO.missing", "YSO.d",
-             "TWIP.d", "RDens.d", "WILD.d",
+             "heatload.d", "TWI.d", "TWIP.d", "RDens.d", "WILD.d",
              "RCovAS.d", "RCovAS.b", "RCovAS.sd", "RCovAS.b.missing", "RCovAS.lower",
              "RCovES.d", "RCovES.b", "RCovES.sd", "RCovES.b.missing", "RCovES.lower",
              "RCovPine.d", "RCovPine.b", "RCovPine.sd", "RCovPine.b.missing", "RCovPine.lower",
@@ -36,7 +36,8 @@ parameters <- c("omega", "rho.ab", "rho.bd",
                 "alpha0", "sigma.a0", "beta0", "sigma.b0", "delta0", "sigma.d0",
                 
                 "Betad.PctDead", "sigma.Betad.PctDead", "Betad.YSO", "sigma.Betad.YSO",
-                "Betad.TWIP", "sigma.Betad.TWIP", "Betad.RDens", "sigma.Betad.RDens", "Betad.WILD", "sigma.Betad.WILD",
+                "Betad.heatload", "sigma.Betad.heatload", "Betad.TWI", "sigma.Betad.TWI", "Betad.TWIP", "sigma.Betad.TWIP",
+                "Betad.RDens", "sigma.Betad.RDens", "Betad.WILD", "sigma.Betad.WILD",
                 "Betad.RCovAS", "sigma.Betad.RCovAS", "Betad.RCovES", "sigma.Betad.RCovES", "Betad.RCovPine", "sigma.Betad.RCovPine",
                 "Betab.PctDead", "sigma.Betab.PctDead",
                 "Betab.YSO", "sigma.Betab.YSO", "Betab.YSO2", "sigma.Betab.YSO2", "Betab.PctDdXYSO", "sigma.Betab.PctDdXYSO",
@@ -47,7 +48,8 @@ parameters <- c("omega", "rho.ab", "rho.bd",
                 "Betaa.YSO", "sigma.Betaa.YSO", "Betaa.YSO2", "sigma.Betaa.YSO2", "Betaa.PctDdXYSO", "sigma.Betaa.PctDdXYSO",
                 
                 "d0", "b0", "a0",
-                "bd.pdead", "bd.YSO", "bd.TWIP", "bd.RDens", "bd.WILD",
+                "bd.pdead", "bd.YSO", "bd.heatload", "bd.TWI", "bd.TWIP",
+                "bd.RDens", "bd.WILD",
                 "bd.RCovAS", "bd.RCovES", "bd.RCovPine",
                 "bb.RCovAS", "bb.RCovES", "bb.RCovPine",
                 "bb.pdead", "bb.YSO", "bb.YSO2", "bb.pdXYSO",
@@ -61,7 +63,8 @@ parameters <- c("omega", "rho.ab", "rho.bd",
 inits <- function()
   list(z=z.init, u=u.init, w=w.init, tvar.sigma.a0 = rnorm(1), tvar.sigma.b0 = rnorm(1), tvar.sigma.d0 = rnorm(1),
        tvar.Betad.PctDead = rnorm(1), tvar.Betad.YSO = rnorm(1),
-       tvar.Betad.TWIP = rnorm(1), tvar.Betad.RDens = rnorm(1), tvar.Betad.WILD = rnorm(1),
+       tvar.Betad.heatload = rnorm(1), tvar.Betad.TWI = rnorm(1), tvar.Betad.TWIP = rnorm(1),
+       tvar.Betad.RDens = rnorm(1), tvar.Betad.WILD = rnorm(1),
        tvar.Betad.RCovAS = rnorm(1), tvar.Betad.RCovES = rnorm(1), tvar.Betad.RCovPine = rnorm(1),
        tvar.Betab.PctDead = rnorm(1), tvar.Betab.YSO = rnorm(1),
        tvar.Betab.YSO2 = rnorm(1), tvar.Betab.PctDdXYSO = rnorm(1),
@@ -111,6 +114,14 @@ YSO.b[is.na(YSO.b)] <- 0
 YSO.d[is.na(YSO.d)] <- 0
 
 #TWIP.b <- Cov[, "TWIP"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
+heatload.d <- Cov[, "heatload"]  %>% # Grid-level values only
+  tapply(gridID, mean) %>%
+  (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T))
+
+TWI.d <- Cov[, "TWI"]  %>% # Grid-level values only
+  tapply(gridID, mean) %>%
+  (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T))
+
 TWIP.d <- Cov[, "TWIP"]  %>% # Grid-level values only
   tapply(gridID, mean) %>%
   (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T))

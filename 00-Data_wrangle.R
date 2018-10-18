@@ -47,7 +47,7 @@ SubSppToSpp <- function(dat) {
 
 #### Compile species list ####
 BCRDataAPI::reset_api()
-BCRDataAPI::set_api_server('192.168.137.180')
+BCRDataAPI::set_api_server('analysis.api.birdconservancy.org')
 BCRDataAPI::add_columns(c('Year|int',
                           'primaryHabitat|str',
                           'Stratum|str',
@@ -103,7 +103,7 @@ spp.excluded <- grab %>%
 
 #### Detection data ####
 BCRDataAPI::reset_api()
-BCRDataAPI::set_api_server('192.168.137.180')
+BCRDataAPI::set_api_server('analysis.api.birdconservancy.org')
 BCRDataAPI::add_columns(c('TransectNum|str',
                           'Point|int',
                           'Year|int',
@@ -268,7 +268,7 @@ cov_tab_import <- read.csv("Covariates.csv", header = T, stringsAsFactors = F) %
 cov_tab_import <- cov_tab_import %>%
   left_join(foreign::read.dbf("C:/Users/Quresh.Latif/files/GIS/CPW/Point_coords.dbf", as.is = T) %>%
                mutate(Point = str_c(TransectNu, "-", str_pad(Point, width = 2, side = "left", pad = "0"))) %>%
-               select(Point, Rd_dens1km), by = "Point")
+               select(Point, Rd_dens1km, heatload, TWI), by = "Point")
 
 ## Trim point and grid lists to those with covariate values ##
 point.list <- point.list[which(point.list %in% cov_tab_import$Point)]
@@ -360,9 +360,9 @@ rm(ind.vals, obs, maxDetPossible, sp, tvec)
 save.image("Data_compiled.RData")
 
 ## Correlation matrices ##
-Cov.LP[, c("TWIP", "WILD", "Rd_dens1km", "DeadConif", "CanCov", "RCOV_AS", "RCOV_ES", "RCOV_Pine",
-           "shrub_cover", "RCShrb_UD", "HerbCov")] %>% cor(use = "complete") %>% round(digits = 3)
+Cov.LP[, c("WILD", "Rd_dens1km", "DeadConif", "CanCov", "RCOV_AS", "RCOV_ES", "RCOV_Pine",
+           "shrub_cover", "RCShrb_UC", "HerbCov", "heatload", "TWI")] %>% cor(use = "complete") %>% round(digits = 3)
 #plot(Cov.LP[, "RCOV_Pine"], Cov.LP[, "RCOV_AS"]) #Drop RCOV_ES from LP strata analysis.
 
 Cov.SF[, c("TWIP", "WILD", "Rd_dens1km", "DeadConif", "CanCov", "RCOV_AS", "RCOV_ES", "RCOV_Pine",
-           "shrub_cover", "RCShrb_UD", "HerbCov")] %>% cor(use = "complete") %>% round(digits = 3)
+           "shrub_cover", "RCShrb_UC", "HerbCov")] %>% cor(use = "complete") %>% round(digits = 3)

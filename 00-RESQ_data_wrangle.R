@@ -14,7 +14,7 @@ nG <- 10 # number of distance categories
 ###################
 
 # Data grab #
-BCRDataAPI::set_api_server('192.168.137.180')
+BCRDataAPI::set_api_server('analysis.api.birdconservancy.org')
 
 BCRDataAPI::reset_api()
 BCRDataAPI::add_columns(c('TransectNum|str',
@@ -91,7 +91,7 @@ cov_tab_import <- read.csv("Covariates.csv", header = T, stringsAsFactors = F) %
 cov_tab_import <- cov_tab_import %>%
   left_join(foreign::read.dbf("C:/Users/Quresh.Latif/files/GIS/CPW/Point_coords.dbf", as.is = T) %>%
               mutate(Point = str_c(TransectNu, "-", str_pad(Point, width = 2, side = "left", pad = "0"))) %>%
-              select(Point, Rd_dens1km), by = "Point")
+              select(Point, Rd_dens1km, heatload, TWI), by = "Point")
 
 ## Compile detection data ##
 cov.names <- c("gridIndex", "DayOfYear", "Time", names(cov_tab_import)[-1])

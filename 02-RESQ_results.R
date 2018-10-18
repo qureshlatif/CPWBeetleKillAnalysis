@@ -11,11 +11,12 @@ setwd("C:/Users/Quresh.Latif/files/projects/CPW/")
 load("Data_compiled_RESQ.RData")
 
 #___ Inputs ___#
+stratum <- "SF" #Set to LP or SF
 mod <- loadObject("mod_RESQ_outbreak_HZdist_SF_reduced")
-pars <- c("beta0.mean", "beta0.sd", "bl.pdead", # Parameters of interest
-          "bl.YSO", "bl.YSO2", "bl.pdXYSO",
+pars <- c("beta0.mean", "beta0.sd", # Parameters of interest
+          "bd.TWIP", "bd.heatload", "bd.TWI", "bd.RDens", "bd.WILD",
+          "bl.pdead", "bl.YSO", "bl.YSO2", "bl.pdXYSO",
           "bl.RCovAS", "bl.RCovES", "bl.RCovPine",
-          "bd.TWIP", "bd.RDens", "bd.WILD",
           "a0", "b", "a.Time", "a.Time2", "a.DOY", "a.DOY2",
           "a.pdead", "a.YSO", "a.YSO2", "a.pdXYSO",
           "bt.0", "bt.Time", "bt.Time2", "bt.DOY",
@@ -36,9 +37,7 @@ write.csv(sum.table, tab.out, row.names = F)
 # Plot outbreak relationships #
 Cov <- eval(as.name(str_c("Cov.", stratum)))
 x.pctdead <- seq(0, 1, length.out = 20)
-#z.pctdead <- (x.pctdead - mean(Cov[, "DeadConif"], na.rm = T)) / sd(Cov[, "DeadConif"], na.rm = T)
 x.YSO <- seq(0, max(Cov[, "YSO"], na.rm = T))
-#z.YSO <- (x.YSO - mean(Cov[, "YSO"], na.rm = T)) / sd(Cov[, "YSO"], na.rm = T)
 plt.tbl <- expand.grid(x.pctdead, x.YSO) %>%
   rename(pctdead = Var1, YSO = Var2) %>%
   mutate(pctdead.z = (pctdead - mean(Cov[, "DeadConif"], na.rm = T)) / sd(Cov[, "DeadConif"], na.rm = T)) %>%

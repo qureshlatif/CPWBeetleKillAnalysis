@@ -28,9 +28,13 @@ model {
   omega ~ dunif(0,1)
   
   # covariates for psi (d)
-  Betad.TWIP ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betad.TWIP ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betad.TWIP <- abs(tvar.Betad.TWIP) # half-Cauchy distribution
+  Betad.heatload ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.heatload ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.heatload <- abs(tvar.Betad.heatload) # half-Cauchy distribution
+
+  Betad.TWI ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betad.TWI ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betad.TWI <- abs(tvar.Betad.TWI) # half-Cauchy distribution
 
   # covariates for theta (b)
   Betab.PctDead ~ dt(0, pow(t.sigma, -2), t.nu)
@@ -100,7 +104,8 @@ model {
     a0[i] ~ dnorm(alpha0 + (rho.ab*sigma.a0/sigma.b0)*(b0[i] - beta0),  pow(sigma.a0,-2)/(1 - pow(rho.ab,2)))
 
     # covariates for psi (d)
-    bd.TWIP[i] ~ dnorm(Betad.TWIP, pow(sigma.Betad.TWIP, -2))
+    bd.heatload[i] ~ dnorm(Betad.heatload, pow(sigma.Betad.heatload, -2))
+    bd.TWI[i] ~ dnorm(Betad.TWI, pow(sigma.Betad.TWI, -2))
 
     # covariates for theta (b)
     bb.pdead[i] ~ dnorm(Betab.PctDead, pow(sigma.Betab.PctDead, -2))
@@ -121,7 +126,7 @@ model {
     # state processes
     w[i] ~ dbern(omega)
     for (k in 1:n.grid) {
-      logit(psi[k, i]) <- d0[i] + bd.TWIP[i]*TWIP.d[k]
+      logit(psi[k, i]) <- d0[i] + bd.heatload[i]*heatload.d[k] + bd.TWI[i]*TWI.d[k]
       z[k, i] ~ dbern(psi[k, i]*w[i])
     }
 
