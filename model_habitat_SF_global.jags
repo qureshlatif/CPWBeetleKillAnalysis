@@ -26,16 +26,7 @@ model {
   
   # metacommunity parameter
   omega ~ dunif(0,1)
-  
-  # covariates for psi (d)
-  Betad.TWI ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betad.TWI ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betad.TWI <- abs(tvar.Betad.TWI) # half-Cauchy distribution
 
-  Betad.heatload ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betad.heatload ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betad.heatload <- abs(tvar.Betad.heatload) # half-Cauchy distribution
-  
   # covariates for theta (b)
   Betab.PctDead ~ dt(0, pow(t.sigma, -2), t.nu)
   tvar.Betab.PctDead ~ dt(0,1,1)  # Cauchy distribution
@@ -44,6 +35,10 @@ model {
   Betab.RCovAS ~ dt(0, pow(t.sigma, -2), t.nu)
   tvar.Betab.RCovAS ~ dt(0,1,1)  # Cauchy distribution
   sigma.Betab.RCovAS <- abs(tvar.Betab.RCovAS) # half-Cauchy distribution
+
+  Betab.RCovES ~ dt(0, pow(t.sigma, -2), t.nu)
+  tvar.Betab.RCovES ~ dt(0,1,1)  # Cauchy distribution
+  sigma.Betab.RCovES <- abs(tvar.Betab.RCovES) # half-Cauchy distribution
 
   Betab.RCovPine ~ dt(0, pow(t.sigma, -2), t.nu)
   tvar.Betab.RCovPine ~ dt(0,1,1)  # Cauchy distribution
@@ -112,6 +107,8 @@ model {
     shcov[j] <- shcov.b[j]*(1 - shcov.b.missing[j]) + shcov.b.imp[j]*shcov.b.missing[j]
     RCovAS.b.imp[j] ~ dnorm(RCovAS.d[gridID[j]], pow(RCovAS.sd[gridID[j]], -2))T(RCovAS.lower,)
     RCovAS[j] <- RCovAS.b[j]*(1 - RCovAS.b.missing[j]) + RCovAS.b.imp[j]*RCovAS.b.missing[j]
+    RCovES.b.imp[j] ~ dnorm(RCovES.d[gridID[j]], pow(RCovES.sd[gridID[j]], -2))T(RCovES.lower,)
+    RCovES[j] <- RCovES.b[j]*(1 - RCovES.b.missing[j]) + RCovES.b.imp[j]*RCovES.b.missing[j]
     RCovPine.b.imp[j] ~ dnorm(RCovPine.d[gridID[j]], pow(RCovPine.sd[gridID[j]], -2))T(RCovPine.lower,)
     RCovPine[j] <- RCovPine.b[j]*(1 - RCovPine.b.missing[j]) + RCovPine.b.imp[j]*RCovPine.b.missing[j]
     RSC_Con.b.imp[j] ~ dnorm(RSC_Con.d[gridID[j]], pow(RSC_Con.sd[gridID[j]], -2))
@@ -132,13 +129,10 @@ model {
     b0[i] ~ dnorm(beta0 + (rho.bd*sigma.b0/sigma.d0)*(d0[i] - delta0),  pow(sigma.b0,-2)/(1 - pow(rho.bd,2)))
     a0[i] ~ dnorm(alpha0 + (rho.ab*sigma.a0/sigma.b0)*(b0[i] - beta0),  pow(sigma.a0,-2)/(1 - pow(rho.ab,2)))
 
-    # covariates for psi (d)
-    bd.TWI[i] ~ dnorm(Betad.TWI, pow(sigma.Betad.TWI, -2))
-    bd.heatload[i] ~ dnorm(Betad.heatload, pow(sigma.Betad.heatload, -2))
-
     # covariates for theta (b)
     bb.pdead[i] ~ dnorm(Betab.PctDead, pow(sigma.Betab.PctDead, -2))
     bb.RCovAS[i] ~ dnorm(Betab.RCovAS, pow(sigma.Betab.RCovAS, -2))
+    bb.RCovES[i] ~ dnorm(Betab.RCovES, pow(sigma.Betab.RCovES, -2))
     bb.RCovPine[i] ~ dnorm(Betab.RCovPine, pow(sigma.Betab.RCovPine, -2))
     bb.CanCov[i] ~ dnorm(Betab.CanCov, pow(sigma.Betab.CanCov, -2))
     bb.ShCov[i] ~ dnorm(Betab.ShCov, pow(sigma.Betab.ShCov, -2))
@@ -159,17 +153,15 @@ model {
     # state processes
     w[i] ~ dbern(omega)
     for (k in 1:n.grid) {
-      logit(psi[k, i]) <- d0[i] + bd.TWI[i]*TWI.d[k] + bd.heatload[i]*heatload.d[k]
+      logit(psi[k, i]) <- d0[i]
       z[k, i] ~ dbern(psi[k, i]*w[i])
     }
 
     for(j in 1:n.point) {
       logit(theta[j, i]) <- b0[i] + bb.pdead[i]*pdead[j] +
-        bb.RCovAS[i]*RCovAS[j] + bb.RCovPine[i]*RCovPine[j] +
-        bb.CanCov[i]*ccov[j] + bb.ShCov[i]*shcov[j] +
-        bb.RSC_Con[i]*RSC_Con[j] + bb.GHerb[i]*GHerb[j] +
-        bb.Gwoody[i]*Gwoody[j] + bb.GDD[i]*GDD[j] +
-        bb.RESQ[i]*RESQ.b[ind.RESQ, j]
+        bb.RCovAS[i]*RCovAS[j] + bb.RCovES[i]*RCovES[j] + bb.RCovPine[i]*RCovPine[j] +
+        bb.CanCov[i]*ccov[j] + bb.ShCov[i]*shcov[j] + bb.RSC_Con[i]*RSC_Con[j] + bb.GHerb[i]*GHerb[j] +
+        bb.Gwoody[i]*Gwoody[j] + bb.GDD[i]*GDD[j] + bb.RESQ[i]*RESQ.b[ind.RESQ, j]
       u[j, i] ~ dbern(theta[j, i]*z[gridID[j], i])
       
       logit(p[j, i]) <- a0[i] + ba.Time[i]*Time.b[j] + ba.Time2[i]*pow(Time.b[j], 2) +

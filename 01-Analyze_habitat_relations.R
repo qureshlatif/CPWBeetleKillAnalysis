@@ -8,16 +8,16 @@ load("Data_compiled.RData")
 
 #### Script inputs ####
 stratum <- "LP"
-maxYSOForPD <- 12 # Set to 12 for LP and 9 for SF
-model.file <- "CPWBeetleKillAnalysis/model_habitat_LP.jags"
+maxYSOForPD <- 9 # Set to 12 for LP and 9 for SF
+model.file <- "CPWBeetleKillAnalysis/model_habitat_LP_global.jags"
 RESQ.model <- "mod_RESQ_outbreak_HZdist_LP_reduced"
 
 # Data objects to send to JAGS
 data <- list("Y", "TPeriod", "gridID", "n.grid", "n.point", "n.spp", "PctDead.b",
              "PctDead.d", "PctDead.sd", "PctDead.lower", "PctDead.b.missing",
-             "TWIP.d", "RDens.d", "WILD.d",
+             "TWIP.d", "TWI.d", "heatload.d", "RDens.d", "WILD.d",
              "RCovAS.d", "RCovAS.b", "RCovAS.sd", "RCovAS.b.missing", "RCovAS.lower",
-             #"RCovES.d", "RCovES.b", "RCovES.sd", "RCovES.b.missing", "RCovES.lower",
+             "RCovES.d", "RCovES.b", "RCovES.sd", "RCovES.b.missing", "RCovES.lower",
              "RCovPine.d", "RCovPine.b", "RCovPine.sd", "RCovPine.b.missing", "RCovPine.lower",
              "ccov.b", "ccov.d", "ccov.sd", "ccov.b.missing",
              "shcov.b", "shcov.d", "shcov.sd", "shcov.b.missing",
@@ -81,9 +81,9 @@ inits <- function()
        tvar.Betaa.CCov = rnorm(1), tvar.Betaa.SHCov = rnorm(1))
 
 # MCMC values
-nc <- 3 # number of chains
-nb <- 1 #10000 # burn in
-ni <- 5 #100000 # number of iterations
+nc <- 2 #3 # number of chains
+nb <- 5000 #10000 # burn in
+ni <- 10000 #100000 # number of iterations
 nt <- 1 #10 # thinning
 
 save.out <- "mod_LPcommunity_habitat"
@@ -116,6 +116,14 @@ PctDead.b.missing <- is.na(PctDead.b) %>% as.integer # Index missing values to b
 
 #TWIP.b <- Cov[, "TWIP"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
 TWIP.d <- Cov[, "TWIP"]  %>% # Grid-level values only
+  tapply(gridID, mean) %>%
+  (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T))
+
+TWI.d <- Cov[, "TWI"]  %>% # Grid-level values only
+  tapply(gridID, mean) %>%
+  (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T))
+
+heatload.d <- Cov[, "heatload"]  %>% # Grid-level values only
   tapply(gridID, mean) %>%
   (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T))
 
