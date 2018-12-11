@@ -8,13 +8,13 @@ load("Data_compiled.RData")
 
 #### Script inputs ####
 stratum <- "LP"
-maxYSOForPD <- 9 # Set to 12 for LP and 9 for SF
+maxYSOForPD <- 12 # Set to 12 for LP and 9 for SF
 model.file <- "CPWBeetleKillAnalysis/model_habitat_LP_global.jags"
 RESQ.model <- "mod_RESQ_outbreak_HZdist_LP_reduced"
 
 # Data objects to send to JAGS
-data <- list("Y", "TPeriod", "gridID", "n.grid", "n.point", "n.spp", "PctDead.b",
-             "PctDead.d", "PctDead.sd", "PctDead.lower", "PctDead.b.missing",
+data <- list("Y", "TPeriod", "gridID", "n.grid", "n.point", "n.spp",
+             "PctDead.d", "PctDead.b", "PctDead.sd", "PctDead.lower", "PctDead.b.missing",
              "TWIP.d", "TWI.d", "heatload.d", "RDens.d", "WILD.d",
              "RCovAS.d", "RCovAS.b", "RCovAS.sd", "RCovAS.b.missing", "RCovAS.lower",
              "RCovES.d", "RCovES.b", "RCovES.sd", "RCovES.b.missing", "RCovES.lower",
@@ -25,7 +25,7 @@ data <- list("Y", "TPeriod", "gridID", "n.grid", "n.point", "n.spp", "PctDead.b"
              "GHerb.d", "GHerb.b", "GHerb.sd", "GHerb.b.missing", "GHerb.lower",
              "Gwoody.d", "Gwoody.b", "Gwoody.sd", "Gwoody.b.missing", "Gwoody.lower",
              "GDD.d", "GDD.b", "GDD.sd", "GDD.b.missing", "GDD.lower",
-             "RESQ.d", "RESQ.b", "RESQ.wts", 
+             "RESQ.d", "RESQ.b", "RESQ.wts", "RESQ.b.simp", 
              "DOY.b", "Time.b")
 
 # Stuff to save from JAGS
@@ -67,7 +67,8 @@ parameters <- c("omega", "rho.ab", "rho.bd",
 # Function for setting initial values in JAGS
 inits <- function()
   list(z=z.init, u=u.init, w=w.init, tvar.sigma.a0 = rnorm(1), tvar.sigma.b0 = rnorm(1), tvar.sigma.d0 = rnorm(1),
-       tvar.Betad.PctDead = rnorm(1), tvar.Betad.TWIP = rnorm(1), tvar.Betad.RDens = rnorm(1), tvar.Betad.WILD = rnorm(1),
+       tvar.Betad.PctDead = rnorm(1), tvar.Betad.TWIP = rnorm(1), tvar.Betad.TWI = rnorm(1), tvar.Betad.heatload = rnorm(1),
+       tvar.Betad.RDens = rnorm(1), tvar.Betad.WILD = rnorm(1),
        tvar.Betad.RCovAS = rnorm(1), tvar.Betad.RCovES = rnorm(1), tvar.Betad.RCovPine = rnorm(1),
        tvar.Betad.CanCov = rnorm(1), tvar.Betad.ShCov = rnorm(1), tvar.Betad.RSC_Con = rnorm(1),
        tvar.Betad.GHerb = rnorm(1), tvar.Betad.Gwoody = rnorm(1), tvar.Betad.GDD = rnorm(1), tvar.Betad.RESQ = rnorm(1),
@@ -169,13 +170,13 @@ ccov.d <- tapply(ccov.b, gridID, mean, na.rm = T) # Grid-level means for imputin
 ccov.sd <- tapply(ccov.b, gridID, sd, na.rm = T) # Grid-level SDs for imputing missing values
 ccov.sd[which(ccov.sd == 0)] <- min(ccov.sd[which(ccov.sd > 0)]) # Zeros won't work for SD!
 ccov.b.missing <- is.na(ccov.b) %>% as.integer # Index missing values to be imputed
-ccov.b[is.na(ccov.b)] <- 0
+ccov.b[is.na(ccov.b)] <- ccov.d[gridID[is.na(ccov.b)]]
 
 shcov.b <- Cov[, "shrub_cover"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
 shcov.d <- tapply(shcov.b, gridID, mean, na.rm = T) # Grid-level means for imputing missing values
 shcov.sd <- tapply(shcov.b, gridID, sd, na.rm = T) # Grid-level SDs for imputing missing values
 shcov.b.missing <- is.na(shcov.b) %>% as.integer # Index missing values to be imputed
-shcov.b[is.na(shcov.b)] <- 0
+shcov.b[is.na(shcov.b)] <- shcov.d[gridID[is.na(shcov.b)]]
 
 RSC_Con.b <- Cov[, "RCShrb_UC"] %>% # Point-level values
   (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Re-scale point values
@@ -231,6 +232,7 @@ RESQ.b <- RESQ.b %>%
 RESQ.d <- RESQ.d %>%
   (function(x) (x - mean(x)) / sd(x))
 RESQ.wts <- rep(1, dim(RESQ.b)[1])
+RESQ.b.simp <- apply(RESQ.b, 2, mean)
 
 DOY.b <- Cov[, "DayOfYear"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
 
