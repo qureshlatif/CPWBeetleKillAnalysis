@@ -152,7 +152,7 @@ cov_tab_import <- read.csv("Covariates.csv", header = T, stringsAsFactors = F) %
 cov_tab_import <- cov_tab_import %>%
   left_join(foreign::read.dbf("C:/Users/Quresh.Latif/files/GIS/CPW/Point_coords.dbf", as.is = T) %>%
               mutate(Point = str_c(TransectNu, "-", str_pad(Point, width = 2, side = "left", pad = "0"))) %>%
-              select(Point, Rd_dens1km), by = "Point")
+              select(Point, TWI, heatload, Rd_dens1km), by = "Point")
 
 ## Compile detection data ##
 cov.names <- c("gridIndex", "DayOfYear", "Time", names(cov_tab_import)[-1])
@@ -229,7 +229,7 @@ for(sp in 1:length(Spp_SF)) {
   dclass <- dat %>%
     filter(!is.na(CL_Count)) %>%
     filter(Point %in% point.list.SF) %>%
-    select(CL_Count, dclass, Point) %>%
+    select(Point, CL_Count, dclass) %>%
     mutate(Point = match(Point, names(Y))) %>%
     rename(Yindex = Point) %>%
     as.matrix()

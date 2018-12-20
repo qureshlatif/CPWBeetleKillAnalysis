@@ -8,13 +8,15 @@ load("Data_compiled.RData")
 
 #__________ Script inputs _____________#
 stratum <- "LP" # Select LP or SF
-mod <- loadObject("mod_LPcommunity_outbreak_reduced2")
+mod <- loadObject("mod_SFcommunity_habitat_global")
 params <- c("bd.pdead", "bd.YSO", "bd.TWIP", "bd.TWI", "bd.heatload",
             "bd.RDens", "bd.WILD", "bd.RCovAS", "bd.RCovES",
             "bd.RCovPine", "bb.pdead", "bb.YSO", "bb.YSO2",
             "bb.pdXYSO", "bb.RCovAS", "bb.RCovES", "bb.RCovPine",
+            "bb.CanCov", "bb.ShCov", "bb.RSC_Con", "bb.GHerb",
+            "bb.Gwoody", "bb.GDD", "bb.RESQ",
             "ba.Time", "ba.Time2", "ba.DOY", "ba.DOY2", "ba.pdead",
-            "ba.YSO", "ba.YSO2", "ba.pdXYSO")
+            "ba.YSO", "ba.YSO2", "ba.pdXYSO", "ba.ccov", "ba.shcov")
 out.vals <- c("est", "f")
 params <- params[which(params %in% names(mod$sims.list))]
 #______________________________________#
