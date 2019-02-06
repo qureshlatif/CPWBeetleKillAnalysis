@@ -7,8 +7,8 @@ setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 load("Data_compiled.RData")
 
 #__________ Script inputs _____________#
-stratum <- "LP" # Select LP or SF
-mod <- loadObject("mod_SFcommunity_habitat_global")
+stratum <- "SF" # Select LP or SF
+mod <- loadObject("mod_SFcommunity_habitat_reduced")
 params <- c("bd.pdead", "bd.YSO", "bd.TWIP", "bd.TWI", "bd.heatload",
             "bd.RDens", "bd.WILD", "bd.RCovAS", "bd.RCovES",
             "bd.RCovPine", "bb.pdead", "bb.YSO", "bb.YSO2",
