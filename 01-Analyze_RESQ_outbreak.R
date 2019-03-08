@@ -8,9 +8,9 @@ setwd("C:/Users/Quresh.Latif/files/projects/CPW/")
 load("Data_compiled_RESQ.RData")
 
 #____________________________________________________ Script inputs _____________________________________________________________#
-stratum <- "SF" # Set stratum (LP or SF)
-maxYSOForPD <- 9 # Set to 12 for LP and 9 for SF
-model.file <- "CPWBeetleKillAnalysis/model_RESQ_outbreak_HZdist_SF_reduced.jags"
+stratum <- "LP" # Set stratum (LP or SF)
+maxYSOForPD <- 12 # Set to 12 for LP and 9 for SF
+model.file <- "CPWBeetleKillAnalysis/model_RESQ_outbreak_HZdist_LP_global.jags"
 
 # MCMC values.  Adjust as needed.
 nc <- 3
@@ -18,7 +18,7 @@ nb <- 5000
 ni <- 40000
 nt <- 10
 
-save.out <- "mod_RESQ_outbreak_HZdist_SF_reduced"
+save.out <- "mod_RESQ_outbreak_HZdist_LP_global"
 #________________________________________________________________________________________________________________________________#
 
 data <- list("Y",
@@ -82,6 +82,9 @@ nGrid <- max(gridID)
 
 # Covariates #
 Cov <- eval(as.name(str_c("Cov.", stratum)))
+
+outbreak_grids <- tapply(Cov[, "YSO"], Cov[, "gridIndex"], function(x) any(!is.na(x))) # index grids intersecting ADS outbreaks
+
 PctDead.b <- Cov[, "DeadConif"] # Point-level values
 PctDead.b[which(Cov[, "YSO"] > maxYSOForPD)] <- NA # Drop values from later years when (presumably) %Dead starts reflecting snag fall 
 PctDead.b <- PctDead.b %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Re-scale point values
@@ -94,13 +97,12 @@ PctDead.sd[which(!is.na(Cov[, "YSO"]))] <- sd(PctDead.b[which(!is.na(Cov[, "YSO"
 PctDead.lower <- min(PctDead.b, na.rm = T) # Lower bound for imputing missing values
 PctDead.b.missing <- is.na(PctDead.b) %>% as.integer # Index missing values to be imputed
 
-outbreak_grids <- tapply(Cov[, "YSO"], Cov[, "gridIndex"], function(x) any(!is.na(x))) # index grids intersecting ADS outbreaks
-YSO.b <- Cov[, "YSO"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
+YSO.b <- Cov[, "YSO"]
+YSO.b[which(!outbreak_grids[gridID])] <- -1
+YSO.b <- YSO.b %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
 YSO.mins <- tapply(YSO.b, gridID, min, na.rm = T) %>% as.numeric # Grid-level values
 YSO.maxs <- tapply(YSO.b, gridID, max, na.rm = T) %>% as.numeric  # Grid-level values
-YSO.mins[which(YSO.mins == Inf)] <- -1
-YSO.maxs[which(YSO.maxs == -Inf)] <- 1
-ind <- which(YSO.mins >= YSO.maxs)
+ind <- which(YSO.mins == YSO.maxs)
 YSO.mins[ind] <- YSO.mins[ind] - 0.01
 YSO.maxs[ind] <- YSO.maxs[ind] + 0.01
 rm(ind)
@@ -166,7 +168,7 @@ if(stratum == "LP") Time.b[point.list.LP == "LP-057-06"] <-
   # Inferred which points after viewing the other points and their associated times in ArcMap.
 
 # Save workspace for model checking #
-save.image("RESQ_GOF_workspace.RData")
+#save.image("RESQ_GOF_workspace.RData")
 
 st.time <- Sys.time()
 out <- jagsUI(data, inits, parameters.to.save = parameters, model.file, n.thin=nt, n.chains=nc,

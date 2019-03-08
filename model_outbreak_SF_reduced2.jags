@@ -6,89 +6,64 @@ model {
   
   rho.ab ~ dunif(-1,1)
   rho.bd ~ dunif(-1,1)
-  
-  # mean and precison for the parameter intercepts
-  
+
   t.nu <- 7.763179      # Uniform prior
   t.sigma <- 1.566267   # Uniform prior
+  
+  # mean and precison for the parameter intercepts
 
   alpha0 ~  dt(0, pow(t.sigma, -2), t.nu)
-  tvar.sigma.a0 ~ dt(0,1,1)  # Cauchy distribution
-  sigma.a0 <- abs(tvar.sigma.a0)  # half-Cauchy distribution
+  sigma.a0 ~ dunif(0, 10)  # More restrictive alternative
   
   beta0 ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.sigma.b0 ~ dt(0,1,1)  # Cauchy distribution
-  sigma.b0 <- abs(tvar.sigma.b0)  # half-Cauchy distribution
+  sigma.b0 ~ dunif(0, 10)  # More restrictive alternative
   
   delta0 ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.sigma.d0 ~ dt(0,1,1)  # Cauchy distribution
-  sigma.d0 <- abs(tvar.sigma.d0)  # half-Cauchy distribution
+  sigma.d0 ~ dunif(0, 10)  # More restrictive alternative
   
   # metacommunity parameter
   omega ~ dunif(0,1)
-  
-  # covariates for psi (d)
-  Betad.heatload ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betad.heatload ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betad.heatload <- abs(tvar.Betad.heatload) # half-Cauchy distribution
-
-  Betad.TWI ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betad.TWI ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betad.TWI <- abs(tvar.Betad.TWI) # half-Cauchy distribution
 
   # covariates for theta (b)
   Betab.PctDead ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betab.PctDead ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betab.PctDead <- abs(tvar.Betab.PctDead) # half-Cauchy distribution
+  sigma.Betab.PctDead ~ dunif(0, 10)  # More restrictive alternative
 
   Betab.YSO ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betab.YSO ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betab.YSO <- abs(tvar.Betab.YSO) # half-Cauchy distribution
+  sigma.Betab.YSO ~ dunif(0, 10)  # More restrictive alternative
   
   Betab.YSO2 ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betab.YSO2 ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betab.YSO2 <- abs(tvar.Betab.YSO2) # half-Cauchy distribution
-  
+  sigma.Betab.YSO2 ~ dunif(0, 10)  # More restrictive alternative
+
   Betab.PctDdXYSO ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betab.PctDdXYSO ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betab.PctDdXYSO <- abs(tvar.Betab.PctDdXYSO) # half-Cauchy distribution
+  sigma.Betab.PctDdXYSO ~ dunif(0, 10)  # More restrictive alternative
 
   Betab.RCovAS ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betab.RCovAS ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betab.RCovAS <- abs(tvar.Betab.RCovAS) # half-Cauchy distribution
+  sigma.Betab.RCovAS ~ dunif(0, 10)  # More restrictive alternative
 
   Betab.RCovES ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betab.RCovES ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betab.RCovES <- abs(tvar.Betab.RCovES) # half-Cauchy distribution
+  sigma.Betab.RCovES ~ dunif(0, 10)  # More restrictive alternative
 
   Betab.RCovPine ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betab.RCovPine ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betab.RCovPine <- abs(tvar.Betab.RCovPine) # half-Cauchy distribution
-
+  sigma.Betab.RCovPine ~ dunif(0, 10)  # More restrictive alternative
+  
   # covariates for p (a)
   Betaa.Time ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betaa.Time ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betaa.Time <- abs(tvar.Betaa.Time) # half-Cauchy distribution
+  sigma.Betaa.Time ~ dunif(0, 10)  # More restrictive alternative
 
   Betaa.Time2 ~ dt(0, pow(t.sigma, -2), t.nu) # Possibly drop quadratics here.
-  tvar.Betaa.Time2 ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betaa.Time2 <- abs(tvar.Betaa.Time2) # half-Cauchy distribution
+  sigma.Betaa.Time2 ~ dunif(0, 10)  # More restrictive alternative
 
   Betaa.DOY ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betaa.DOY ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betaa.DOY <- abs(tvar.Betaa.DOY) # half-Cauchy distribution
+  sigma.Betaa.DOY ~ dunif(0, 10)  # More restrictive alternative
 
   Betaa.DOY2 ~ dt(0, pow(t.sigma,-2), t.nu)
-  tvar.Betaa.DOY2 ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betaa.DOY2 <- abs(tvar.Betaa.DOY2) # half-Cauchy distribution
+  sigma.Betaa.DOY2 ~ dunif(0, 10)  # More restrictive alternative
 
   Betaa.PctDead ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betaa.PctDead ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betaa.PctDead <- abs(tvar.Betaa.PctDead) # half-Cauchy distribution
+  sigma.Betaa.PctDead ~ dunif(0, 10)  # More restrictive alternative
 
   Betaa.YSO ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.Betaa.YSO ~ dt(0,1,1)  # Cauchy distribution
-  sigma.Betaa.YSO <- abs(tvar.Betaa.YSO) # half-Cauchy distribution
+  sigma.Betaa.YSO ~ dunif(0, 10)  # More restrictive alternative
 
   # Impute missing data
   for(j in 1:n.point) {
@@ -108,10 +83,6 @@ model {
     d0[i] ~ dnorm(delta0, pow(sigma.d0,-2))
     b0[i] ~ dnorm(beta0 + (rho.bd*sigma.b0/sigma.d0)*(d0[i] - delta0),  pow(sigma.b0,-2)/(1 - pow(rho.bd,2)))
     a0[i] ~ dnorm(alpha0 + (rho.ab*sigma.a0/sigma.b0)*(b0[i] - beta0),  pow(sigma.a0,-2)/(1 - pow(rho.ab,2)))
-
-    # covariates for psi (d)
-    bd.heatload[i] ~ dnorm(Betad.heatload, pow(sigma.Betad.heatload, -2))
-    bd.TWI[i] ~ dnorm(Betad.TWI, pow(sigma.Betad.TWI, -2))
 
     # covariates for theta (b)
     bb.pdead[i] ~ dnorm(Betab.PctDead, pow(sigma.Betab.PctDead, -2))
@@ -133,7 +104,7 @@ model {
     # state processes
     w[i] ~ dbern(omega)
     for (k in 1:n.grid) {
-      logit(psi[k, i]) <- d0[i] + bd.heatload[i]*heatload.d[k] + bd.TWI[i]*TWI.d[k]
+      logit(psi[k, i]) <- d0[i]
       z[k, i] ~ dbern(psi[k, i]*w[i])
     }
 

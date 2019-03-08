@@ -37,24 +37,28 @@ p.LP <- ggplot(data = dat.LP %>%
                  mutate(YSO = replace(YSO, which(Outbreak == 0), -2)), aes(x = YSO, y = DeadConif)) +
   geom_point(alpha = 0.2) +
   xlab(NULL) + ylab(NULL) +
-  annotate("text", x = 5, y = 105, label = "Lodgpole pine stratum", size = 4) +
+  annotate("text", x = 5, y = 105, label = "Lodgpole pine forest", size = 4) +
   geom_vline(xintercept = -1, linetype = "dashed") +
-  annotate("text", x = -2, y = 90, label = "No outbreak", size = 3, angle = 90)
+  geom_vline(xintercept = 12.5, linetype = "dashed") +
+  annotate("text", x = -2, y = 90, label = "No outbreak", size = 3, angle = 90) +
+  annotate("text", x = 13, y = 95, label = "Dead conifer\nvalues excluded\nfrom analysis", size = 2.5, hjust = 0)
 
 p.SF <- ggplot(data = dat.SF %>%
                  mutate(YSO = replace(YSO, which(Outbreak == 0), -2)), aes(x = YSO, y = DeadConif)) +
   geom_point(alpha = 0.2) +
   xlab(NULL) + ylab(NULL) +
-  annotate("text", x = 5, y = 105, label = "Spruce-fir stratum", size = 4) +
+  annotate("text", x = 5, y = 105, label = "Spruce-fir forest", size = 4) +
   geom_vline(xintercept = -1, linetype = "dashed") +
-  annotate("text", x = -2, y = 90, label = "No outbreak", size = 3, angle = 90)
+  geom_vline(xintercept = 9.5, linetype = "dashed") +
+  annotate("text", x = -2, y = 90, label = "No outbreak", size = 3, angle = 90) +
+  annotate("text", x = 10, y = 95, label = "Dead conifer\nvalues excluded\nfrom analysis", size = 2.5, hjust = 0)
 
 p <- ggdraw() + 
   draw_plot(p.LP, x = 0.05, y = 0.05, width = 0.475, height = 0.95) +
   draw_plot(p.SF, x = 0.525, y = 0.05, width = 0.475, height = 0.95) +
-  draw_plot_label(c("Percent conifer dead", "Years since outbreak"),
+  draw_plot_label(c("Dead conifer", "Years since outbreak"),
                   x = c(0.03, 0.4),
-                  y = c(0.25, 0.03),
+                  y = c(0.35, 0.03),
                   size = c(15, 15),
                   angle = c(90, 0),
                   hjust = c(0, 0),
@@ -371,7 +375,7 @@ p.Canopy <- ggdraw() +
   draw_plot(p.ES.SF, x = .525, y = 0.2375, width = .475, height = 0.2375) +
   draw_plot(p.Pine.LP, x = .05, y = 0, width = .475, height = 0.2375) +
   draw_plot(p.Pine.SF, x = .525, y = 0, width = .475, height = 0.2375) +
-  draw_plot_label(c("% Pine", "% Spruce", "% Aspen", "Canopy cover",
+  draw_plot_label(c("Pine", "Spruce", "Aspen", "CanCov",
                     "Lodgepole pine", "Spruce-fir"),
                   x = c(.03, .52, .03, .03, .25, .7),
                   y = c(.1, .33, .58, .8, .97, .97),
@@ -503,10 +507,10 @@ p.Shrub <- ggdraw() +
   draw_plot(p.Shrub.SF, x = .525, y = 0.475, width = .475, height = 0.475) +
   draw_plot(p.CShrb.LP, x = .05, y = 0, width = .475, height = 0.475) +
   draw_plot(p.CShrb.SF, x = .525, y = 0, width = .475, height = 0.475) +
-  draw_plot_label(c("% Conifer shrubs", "Shrub Cover",
+  draw_plot_label(c("ConShrb", "ShrubCov",
                     "Lodgepole pine", "Spruce-fir"),
                   x = c(.03, .03, .25, .7),
-                  y = c(.25, .75, .97, .97),
+                  y = c(.2, .65, .97, .97),
                   size = c(15, 15, 17, 17),
                   angle = c(90, 90, 0, 0),
                   hjust = c(0, 0, 0, 0),
@@ -693,10 +697,10 @@ p.Ground <- ggdraw() +
   draw_plot(p.DDCov.SF, x = .525, y = 0.3166667, width = .475, height = 0.3166667) +
   draw_plot(p.Herb.LP, x = .05, y = 0, width = .475, height = 0.3166667) +
   draw_plot(p.Herb.SF, x = .525, y = 0, width = .475, height = 0.3166667) +
-  draw_plot_label(c("% Herbaceous", "% Dead and down", "% Woody",
+  draw_plot_label(c("Herb", "DeadDown", "Woody",
                     "Lodgepole pine", "Spruce-fir"),
                   x = c(.03, .03, .03, .25, .7),
-                  y = c(.12, .43, .77, .97, .97),
+                  y = c(.15, .45, .8, .97, .97),
                   size = c(15, 15, 15, 17, 17),
                   angle = c(90, 90, 90, 0, 0),
                   hjust = c(0, 0, 0, 0, 0),

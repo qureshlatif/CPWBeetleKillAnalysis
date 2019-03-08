@@ -1,6 +1,6 @@
 require(dplyr)
 require(stringr)
-setwd("F:/research stuff/BCR/projects/CPW")
+setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 
 ### Compile beetle covariates from Jake Ivan's files ###
 dat <- read.csv("JIvan_files/BCR_Dead_Conifer_Qry_Headers.csv", header=T, stringsAsFactors = F) %>%

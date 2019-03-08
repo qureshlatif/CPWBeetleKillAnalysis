@@ -8,21 +8,17 @@ model {
   rho.bd ~ dunif(-1,1)
   
   # mean and precison for the parameter intercepts
-  
   t.nu <- 7.763179      # Uniform prior
   t.sigma <- 1.566267   # Uniform prior
 
   alpha0 ~  dt(0, pow(t.sigma, -2), t.nu)
-  tvar.sigma.a0 ~ dt(0,1,1)  # Cauchy distribution
-  sigma.a0 <- abs(tvar.sigma.a0)  # half-Cauchy distribution
+  sigma.a0 ~ dunif(0, 10)  # More restrictive alternative
   
   beta0 ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.sigma.b0 ~ dt(0,1,1)  # Cauchy distribution
-  sigma.b0 <- abs(tvar.sigma.b0)  # half-Cauchy distribution
+  sigma.b0 ~ dunif(0, 10)  # More restrictive alternative
   
   delta0 ~ dt(0, pow(t.sigma, -2), t.nu)
-  tvar.sigma.d0 ~ dt(0,1,1)  # Cauchy distribution
-  sigma.d0 <- abs(tvar.sigma.d0)  # half-Cauchy distribution
+  sigma.d0 ~ dunif(0, 10)  # More restrictive alternative
   
   # metacommunity parameter
   omega ~ dunif(0,1)

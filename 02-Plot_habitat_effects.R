@@ -11,10 +11,13 @@ load("Data_compiled.RData")
 
 mod_LP <- loadObject("mod_LPcommunity_habitat_reduced")
 mod_SF <- loadObject("mod_SFcommunity_habitat_reduced")
-spp.outbreak <- c("WETA", "YRWA", "DEJU", "WCSP",
-                  "LISP", "PISI", "PIGR", "AMRO",
-                  "HETH", "TOSO", "RCKI", "STJA",
-                  "WAVI", "WEWP", "OSFL", "ATTW")
+spp.outbreak <- c("MODO", "BTLH", "ATTW", "NOFL",
+                  "OSFL", "WEWP", "COFL", "WAVI",
+                  "GRAJ", "STJA", "RBNU", "GCKI",
+                  "RCKI", "TOSO", "HETH", "AMRO",
+                  "PIGR", "CAFI", "RECR", "PISI",
+                  "GTTO", "CHSP", "LISP", "WCSP",
+                  "DEJU", "YRWA", "WETA")
 
 # Tabulate parameter estimates
 pars <- c("theta", "bb.RCovAS", "bb.RCovPine", "bb.RCovES", "bb.CanCov", "bb.ShCov", "bb.RSC_Con", "bb.GHerb", "bb.Gwoody", "bb.GDD")
@@ -27,24 +30,24 @@ parest_LP <- parest_SF <- matrix(NA, nrow = length(spp.list), ncol = length(cols
 for(par in pars[-which(pars %in% c("theta", "bb.RCovES"))]) {
   parm <- mod_LP$sims.list[[par]]
   parest_LP[, par] <- apply(parm, 2, median)
-  parest_LP[, str_c(par, ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.025, type = 8))
-  parest_LP[, str_c(par, ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.975, type = 8))
+  parest_LP[, str_c(par, ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8))
+  parest_LP[, str_c(par, ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8))
 }
 parm <- expit(mod_LP$sims.list[["b0"]])
 parest_LP[, "theta"] <- apply(parm, 2, median)
-parest_LP[, "theta.lo"] <- apply(parm, 2, function(x) quantile(x, prob = 0.025, type = 8))
-parest_LP[, "theta.hi"] <- apply(parm, 2, function(x) quantile(x, prob = 0.975, type = 8))
+parest_LP[, "theta.lo"] <- apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8))
+parest_LP[, "theta.hi"] <- apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8))
 
 for(par in pars[-which(pars %in% c("theta", "bb.RCovPine"))]) {
   parm <- mod_SF$sims.list[[par]]
   parest_SF[, par] <- apply(parm, 2, median)
-  parest_SF[, str_c(par, ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.025, type = 8))
-  parest_SF[, str_c(par, ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.975, type = 8))
+  parest_SF[, str_c(par, ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8))
+  parest_SF[, str_c(par, ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8))
 }
 parm <- expit(mod_SF$sims.list[["b0"]])
 parest_SF[, "theta"] <- apply(parm, 2, median)
-parest_SF[, "theta.lo"] <- apply(parm, 2, function(x) quantile(x, prob = 0.025, type = 8))
-parest_SF[, "theta.hi"] <- apply(parm, 2, function(x) quantile(x, prob = 0.975, type = 8))
+parest_SF[, "theta.lo"] <- apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8))
+parest_SF[, "theta.hi"] <- apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8))
 
 rm(parm)
 
@@ -317,7 +320,7 @@ p.GHerb <- ggplot(dat = dat.plt.SF, aes(x = index, y = bb.GHerb, color = bb.GHer
   coord_flip() +
   scale_x_continuous(breaks = 1:nrow(dat.plt.SF), labels = dat.plt.SF$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
-  scale_color_manual(values = c("dark gray", "#D55E00")) +
+  scale_color_manual(values = c("#0072B2", "dark gray", "#D55E00")) +
   ylab(expression(hat(beta)["Herbaceous cover"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
