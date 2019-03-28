@@ -30,6 +30,9 @@ model {
   Betab.RCovES ~ dt(0, pow(t.sigma, -2), t.nu)
   sigma.Betab.RCovES ~ dunif(0, 10)  # More restrictive alternative
 
+  Betab.RCovPine ~ dt(0, pow(t.sigma, -2), t.nu)
+  sigma.Betab.RCovPine ~ dunif(0, 10)  # More restrictive alternative
+
   Betab.CanCov ~ dt(0, pow(t.sigma, -2), t.nu)
   sigma.Betab.CanCov ~ dunif(0, 10)  # More restrictive alternative
 
@@ -75,6 +78,7 @@ model {
     # covariates for theta (b)
     bb.RCovAS[i] ~ dnorm(Betab.RCovAS, pow(sigma.Betab.RCovAS, -2))
     bb.RCovES[i] ~ dnorm(Betab.RCovES, pow(sigma.Betab.RCovES, -2))
+    bb.RCovPine[i] ~ dnorm(Betab.RCovPine, pow(sigma.Betab.RCovPine, -2))
     bb.CanCov[i] ~ dnorm(Betab.CanCov, pow(sigma.Betab.CanCov, -2))
     bb.ShCov[i] ~ dnorm(Betab.ShCov, pow(sigma.Betab.ShCov, -2))
     bb.RSC_Con[i] ~ dnorm(Betab.RSC_Con, pow(sigma.Betab.RSC_Con, -2))
@@ -98,8 +102,8 @@ model {
     }
 
     for(j in 1:n.point) {
-      logit(theta[j, i]) <- b0[i] + 
-        bb.RCovAS[i]*RCovAS.b[j] + bb.RCovES[i]*RCovES.b[j] +
+      logit(theta[j, i]) <- b0[i] + bb.RCovAS[i]*RCovAS.b[j] +
+        bb.RCovES[i]*RCovES.b[j] + bb.RCovPine[i]*RCovPine.b[j] +
         bb.CanCov[i]*ccov.b[j] + bb.ShCov[i]*shcov.b[j] +
         bb.RSC_Con[i]*RSC_Con.b[j] + bb.GHerb[i]*GHerb.b[j] +
         bb.Gwoody[i]*Gwoody.b[j] + bb.GDD[i]*GDD.b[j]

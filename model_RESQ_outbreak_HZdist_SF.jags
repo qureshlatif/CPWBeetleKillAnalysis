@@ -23,16 +23,9 @@
       beta0.mean ~ dnorm(0, 0.1)
       beta0.sd ~ dunif(0, 10)
       beta0.tau <- pow(beta0.sd, -2)
-            
-      bd.TWI ~ dnorm(0, 0.1)
-      bd.heatload ~ dnorm(0, 0.1)
-      bd.RDens ~ dnorm(0, 0.1)
-      bd.WILD ~ dnorm(0, 0.1)
 
       for(g in 1:nGrid) {
-        beta00[g] ~ dnorm(beta0.mean, beta0.tau)
-        beta0[g] <- beta00[g] + bd.TWI*TWI.d[g] + bd.heatload*heatload.d[g] +
-          bd.RDens*RDens.d[g] + bd.WILD*WILD.d[g]
+        beta0[g] ~ dnorm(beta0.mean, beta0.tau)
       }
 
       bl.pdead ~ dnorm(0, 0.1)

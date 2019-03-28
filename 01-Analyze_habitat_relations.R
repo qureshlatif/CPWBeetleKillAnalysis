@@ -7,10 +7,10 @@ setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 load("Data_compiled.RData")
 
 #### Script inputs ####
-stratum <- "LP"
+stratum <- "SF"
 maxYSOForPD <- 12 # Set to 12 for LP and 9 for SF
-model.file <- "CPWBeetleKillAnalysis/model_habitat_LP_global.jags"
-RESQ.model <- "mod_RESQ_outbreak_HZdist_LP_reduced"
+model.file <- "CPWBeetleKillAnalysis/model_habitat_SF_reduced.jags"
+RESQ.model <- "mod_RESQ_outbreak_HZdist_SF_reduced"
 
 # Data objects to send to JAGS
 data <- list("Y", "TPeriod", "gridID", "n.grid", "n.point", "n.spp",
@@ -25,7 +25,7 @@ data <- list("Y", "TPeriod", "gridID", "n.grid", "n.point", "n.spp",
              "GHerb.d", "GHerb.b", "GHerb.sd", "GHerb.b.missing", "GHerb.lower",
              "Gwoody.d", "Gwoody.b", "Gwoody.sd", "Gwoody.b.missing", "Gwoody.lower",
              "GDD.d", "GDD.b", "GDD.sd", "GDD.b.missing", "GDD.lower",
-             "RESQ.d", "RESQ.b", "RESQ.wts", "RESQ.b.simp", 
+             #"RESQ.d", "RESQ.b", "RESQ.wts", "RESQ.b.simp", 
              "DOY.b", "Time.b")
 
 # Stuff to save from JAGS
@@ -83,12 +83,12 @@ inits <- function()
        tvar.Betaa.CCov = rnorm(1), tvar.Betaa.SHCov = rnorm(1))
 
 # MCMC values
-nc <- 2 #3 # number of chains
-nb <- 5000 #10000 # burn in
-ni <- 10000 #100000 # number of iterations
-nt <- 1 #10 # thinning
+nc <- 3 # number of chains
+nb <- 10000 # burn in
+ni <- 100000 # number of iterations
+nt <- 10 # thinning
 
-save.out <- "mod_LPcommunity_habitat"
+save.out <- "mod_SFcommunity_habitat_reduced"
 ##########################
 
 # Detection data #
@@ -220,20 +220,20 @@ GDD.lower <- min(GDD.b, na.rm = T) # Lower bound for imputing missing values
 GDD.b[which(is.na(GDD.b))] <- GDD.d[gridID][which(is.na(GDD.b))] # Insert means for imputing PctDead for points in non-outbreak grids
 
 library(R.utils)
-mod <- loadObject(RESQ.model)
-RESQ.b <- mod$sims.list$N
-#cl.size.samps <- mod$sims.list$cl.size
-#RESQ.b <- apply(N, c(1, 2), function(x) sum(base::sample(cl.size.samps, x)))
-rm(mod) #N, cl.size.samps
-RESQ.d <- matrix(NA, nrow = dim(RESQ.b)[1], ncol = n.grid)
-for(i in 1:nrow(RESQ.d)) RESQ.d[i, ] <- tapply(RESQ.b[i, ], gridID, sum) # Probably can make this faster with series of applys or mapply or something
-# z-score
-RESQ.b <- RESQ.b %>%
-  (function(x) (x - mean(x)) / sd(x))
-RESQ.d <- RESQ.d %>%
-  (function(x) (x - mean(x)) / sd(x))
-RESQ.wts <- rep(1, dim(RESQ.b)[1])
-RESQ.b.simp <- apply(RESQ.b, 2, mean)
+# mod <- loadObject(RESQ.model)
+# RESQ.b <- mod$sims.list$N
+# #cl.size.samps <- mod$sims.list$cl.size
+# #RESQ.b <- apply(N, c(1, 2), function(x) sum(base::sample(cl.size.samps, x)))
+# rm(mod) #N, cl.size.samps
+# RESQ.d <- matrix(NA, nrow = dim(RESQ.b)[1], ncol = n.grid)
+# for(i in 1:nrow(RESQ.d)) RESQ.d[i, ] <- tapply(RESQ.b[i, ], gridID, sum) # Probably can make this faster with series of applys or mapply or something
+# # z-score
+# RESQ.b <- RESQ.b %>%
+#   (function(x) (x - mean(x)) / sd(x))
+# RESQ.d <- RESQ.d %>%
+#   (function(x) (x - mean(x)) / sd(x))
+# RESQ.wts <- rep(1, dim(RESQ.b)[1])
+# RESQ.b.simp <- apply(RESQ.b, 2, mean)
 
 DOY.b <- Cov[, "DayOfYear"] %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)) # Point-level values
 

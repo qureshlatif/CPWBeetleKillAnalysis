@@ -12,13 +12,16 @@ load("Data_compiled_RESQ.RData")
 
 #___ Inputs ___#
 stratum <- "SF" #Set to LP or SF
-mod <- loadObject("mod_RESQ_outbreak_HZdist_SF_reduced")
+mod <- loadObject("mod_RESQ_habitat_HZdist_SF")
 pars <- c("beta0.mean", "beta0.sd", # Parameters of interest
           "bd.TWIP", "bd.heatload", "bd.TWI", "bd.RDens", "bd.WILD",
           "bl.pdead", "bl.YSO", "bl.YSO2", "bl.pdXYSO",
           "bl.RCovAS", "bl.RCovES", "bl.RCovPine",
+          "bl.ccov", "bl.RCovPine", "bl.RCovES", "bl.RCovAS",
+          "bl.shcov", "bl.RSC_Con", "bl.GHerb", "bl.Gwoody", "bl.GDD",
           "a0", "b", "a.Time", "a.Time2", "a.DOY", "a.DOY2",
           "a.pdead", "a.YSO", "a.YSO2", "a.pdXYSO",
+          "a.ccov", "a.shcov",
           "bt.0", "bt.Time", "bt.Time2", "bt.DOY",
           "bt.DOY2", "bt.ccov", "bt.shcov")
 tab.out <- "Param_summ_RESQ.csv"

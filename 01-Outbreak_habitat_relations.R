@@ -78,37 +78,46 @@ vars <- c("CanCov", "RCOV_AS", "RCOV_ES", "RCOV_Pine", "shrub_cover", "RCShrb_UC
 cols <- c("Int.LP", "YSO.LP", "YSO2.LP", "DCon.LP", "YSOXDCon.LP", "Int.SF", "YSO.SF", "YSO2.SF", "DCon.SF", "YSOXDCon.SF")
 out <- matrix(NA, nrow = length(vars), ncol = length(cols),
               dimnames = list(vars, cols))
+sigfig <- 2
+
+## Rescale covariates ##
+dat.LP.z <- dat.LP %>%
+  mutate(YSO = YSO %>% (function(x) (x - mean(x)) / sd(x)),
+         DeadConif = DeadConif %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)))
+dat.SF.z <- dat.SF %>%
+  mutate(YSO = YSO %>% (function(x) (x - mean(x)) / sd(x)),
+         DeadConif = DeadConif %>% (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)))
 
 for(i in 1:length(vars)) {
-  mod <- lm(as.formula(str_c(vars[i], "~ YSO + I(YSO^2) + DeadConif + I(DeadConif*YSO)")), data = dat.LP)
+  mod <- lm(as.formula(str_c(vars[i], "~ YSO + I(YSO^2) + DeadConif + I(DeadConif*YSO)")), data = dat.LP.z)
   sum.tab <- summary(mod)$coefficients
   out[vars[i], c("Int.LP", "YSO.LP", "YSO2.LP", "DCon.LP", "YSOXDCon.LP")] <-
-    str_c(round(sum.tab[, "Estimate"], digits = 3), " (",
-          round(sum.tab[, "Std. Error"], digits = 3), ")")
+    str_c(round(sum.tab[, "Estimate"], digits = sigfig), " (",
+          round(sum.tab[, "Std. Error"], digits = sigfig), ")")
   if(any(sum.tab[-1, "Pr(>|t|)"] < 0.05)) {
     sig.ind <- which(sum.tab[-1, "Pr(>|t|)"] < 0.05)
+    out[vars[i], c("YSO.LP", "YSO2.LP", "DCon.LP", "YSOXDCon.LP")][sig.ind] <-
+      str_c(out[vars[i], c("YSO.LP", "YSO2.LP", "DCon.LP", "YSOXDCon.LP")][sig.ind], "**")
+  }
+  if(any(sum.tab[-1, "Pr(>|t|)"] >= 0.05 & sum.tab[-1, "Pr(>|t|)"] < 0.1)) {
+    sig.ind <- which(sum.tab[-1, "Pr(>|t|)"] >= 0.05 & sum.tab[-1, "Pr(>|t|)"] < 0.1)
     out[vars[i], c("YSO.LP", "YSO2.LP", "DCon.LP", "YSOXDCon.LP")][sig.ind] <-
       str_c(out[vars[i], c("YSO.LP", "YSO2.LP", "DCon.LP", "YSOXDCon.LP")][sig.ind], "*")
   }
-  if(any(sum.tab[-1, "Pr(>|t|)"] >= 0.05 & sum.tab[-1, "Pr(>|t|)"] < 0.1)) {
-    sig.ind <- which(sum.tab[-1, "Pr(>|t|)"] >= 0.05 & sum.tab[-1, "Pr(>|t|)"] < 0.1)
-    out[vars[i], c("YSO.LP", "YSO2.LP", "DCon.LP", "YSOXDCon.LP")][sig.ind] <-
-      str_c(out[vars[i], c("YSO.LP", "YSO2.LP", "DCon.LP", "YSOXDCon.LP")][sig.ind], ".")
-  }
-  mod <- lm(as.formula(str_c(vars[i], "~ YSO + I(YSO^2) + DeadConif + I(DeadConif*YSO)")), data = dat.SF)
+  mod <- lm(as.formula(str_c(vars[i], "~ YSO + I(YSO^2) + DeadConif + I(DeadConif*YSO)")), data = dat.SF.z)
   sum.tab <- summary(mod)$coefficients
   out[vars[i], c("Int.SF", "YSO.SF", "YSO2.SF", "DCon.SF", "YSOXDCon.SF")] <-
-    str_c(round(sum.tab[, "Estimate"], digits = 3), " (",
-          round(sum.tab[, "Std. Error"], digits = 3), ")")
+    str_c(round(sum.tab[, "Estimate"], digits = sigfig), " (",
+          round(sum.tab[, "Std. Error"], digits = sigfig), ")")
   if(any(sum.tab[-1, "Pr(>|t|)"] < 0.05)) {
     sig.ind <- which(sum.tab[-1, "Pr(>|t|)"] < 0.05)
     out[vars[i], c("YSO.SF", "YSO2.SF", "DCon.SF", "YSOXDCon.SF")][sig.ind] <-
-      str_c(out[vars[i], c("YSO.SF", "YSO2.SF", "DCon.SF", "YSOXDCon.SF")][sig.ind], "*")
+      str_c(out[vars[i], c("YSO.SF", "YSO2.SF", "DCon.SF", "YSOXDCon.SF")][sig.ind], "**")
   }
   if(any(sum.tab[-1, "Pr(>|t|)"] >= 0.05 & sum.tab[-1, "Pr(>|t|)"] < 0.1)) {
     sig.ind <- which(sum.tab[-1, "Pr(>|t|)"] >= 0.05 & sum.tab[-1, "Pr(>|t|)"] < 0.1)
     out[vars[i], c("YSO.SF", "YSO2.SF", "DCon.SF", "YSOXDCon.SF")][sig.ind] <-
-      str_c(out[vars[i], c("YSO.SF", "YSO2.SF", "DCon.SF", "YSOXDCon.SF")][sig.ind], ".")
+      str_c(out[vars[i], c("YSO.SF", "YSO2.SF", "DCon.SF", "YSOXDCon.SF")][sig.ind], "*")
   }
 }
 

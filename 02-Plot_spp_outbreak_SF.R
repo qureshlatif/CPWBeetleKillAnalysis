@@ -11,46 +11,31 @@ load("Data_compiled.RData")
 
 #_______Script inputs_______#
 stratum <- "SF"
-mod <- loadObject("mod_SFcommunity_outbreak_reduced3")
+mod <- loadObject("mod_SFcommunity_outbreak_reduced2")
 maxyso <- 9 # Set to 12 for LP and 9 for SF
 #___________________________#
 Cov <- str_c("Cov.", stratum) %>% as.name %>% eval
 
 #_______ Functions _________#
-dat.pdead.fn <- function(ind.spp, pdead, mod) {
-  x.pdead <- seq(min(pdead), max(pdead), length.out = 10)
-  z.pdead <- (x.pdead - mean(pdead, na.rm = T)) / sd(pdead, na.rm = T)
-  x.pdead <- x.pdead * 100
-  dat.pred <- data.frame(x.pdead = x.pdead, z.pdead = z.pdead,
-                         pred = NA, pred.lo = NA, pred.hi = NA)
-
-  D0 <- mod$sims.list$d0[, ind.spp]
-  B0 <- mod$sims.list$b0[, ind.spp]
-  B.pdead <- mod$sims.list$bb.pdead[, ind.spp]
-  for(i in 1:nrow(dat.pred)) {
-    psi <- expit(D0)
-    theta <- expit(B0 + B.pdead*dat.pred$z.pdead[i])
-    dat.pred$pred[i] <- median(psi * theta)
-    dat.pred$pred.lo[i] <- quantile(psi * theta, prob = 0.05, type = 8)
-    dat.pred$pred.hi[i] <- quantile(psi * theta, prob = 0.95, type = 8)
-  }
-  return(dat.pred)
-}
-
-dat.yso.fn <- function(ind.spp, yso, mod) {
-  yso <- yso[which(!is.na(yso))]
-  x.yso <- seq(min(yso), max(yso))
+dat.fn <- function(ind.spp, yso, pdead, mod) {
+  x.yso <- rep(-1:18, 2)
   z.yso <- (x.yso - mean(yso, na.rm = T)) / sd(yso, na.rm = T)
+  x.pd <- c(rep(0, 20), rep(100, 20))
+  z.pd <- ((x.pd / 100) - mean(pdead, na.rm = T)) / sd(pdead, na.rm = T)
   dat.pred <- data.frame(x.yso = x.yso, z.yso = z.yso,
+                         x.pd = x.pd, z.pd = z.pd,
                          pred = NA, pred.lo = NA, pred.hi = NA)
   
   D0 <- mod$sims.list$d0[, ind.spp]
   B0 <- mod$sims.list$b0[, ind.spp]
+  B.pdead <- mod$sims.list$bb.pdead[, ind.spp]
   B.yso <- mod$sims.list$bb.YSO[, ind.spp]
   B.yso2 <- mod$sims.list$bb.YSO2[, ind.spp]
+  B.pdXYSO <- mod$sims.list$bb.pdXYSO[, ind.spp]
   for(i in 1:nrow(dat.pred)) {
     psi <- expit(D0)
-    theta <- expit(B0 + B.yso*dat.pred$z.yso[i] + B.yso2*dat.pred$z.yso[i]^2)
+    theta <- expit(B0 + B.pdead*dat.pred$z.pd[i] + B.yso*dat.pred$z.yso[i] +
+                     B.yso2*dat.pred$z.yso[i]^2 + B.pdXYSO*dat.pred$z.pd[i]*dat.pred$z.yso[i])
     dat.pred$pred[i] <- median(psi * theta)
     dat.pred$pred.lo[i] <- quantile(psi * theta, prob = 0.05, type = 8)
     dat.pred$pred.hi[i] <- quantile(psi * theta, prob = 0.95, type = 8)
@@ -59,8 +44,8 @@ dat.yso.fn <- function(ind.spp, yso, mod) {
 }
 #___________________________#
 
-##____ Group 1 - supported relations with pdead ____##
-spp.plot <- c("ATTW", "COFL", "WAVI", "STJA", "RBNU", "PISI")
+spp.plot <- c("ATTW", "WAVI", "STJA", "CLNU", "CORA",
+              "RBNU", "GCKI", "HETH", "PISI", "DEJU")
 
 for(i in 1:length(spp.plot)) {
   spp <- spp.plot[i]
@@ -68,107 +53,42 @@ for(i in 1:length(spp.plot)) {
   
   pdd <- Cov[, "DeadConif"]
   pdd[which(Cov[, "YSO"] > maxyso)] <- NA
-  pdd <- pdd[-which(is.na(pdd))]
-  dat.pdead <- dat.pdead.fn(ind.spp, pdd, mod)
-  p1 <- ggplot(dat.pdead, aes(x = x.pdead, y = pred)) +
-    geom_line(size = 1) +
-    geom_ribbon(aes(ymin = pred.lo, ymax = pred.hi), alpha = 0.4) +
-    ylim(0, 1) +
-    xlab(NULL) + ylab(NULL)
-  
   yso <- Cov[, "YSO"]
   yso <- yso[-which(is.na(yso))]
-  dat.yso <- dat.yso.fn(ind.spp, yso, mod)
-  p2 <- ggplot(dat.yso, aes(x = x.yso, y = pred)) +
-    geom_line(size = 1) +
-    geom_ribbon(aes(ymin = pred.lo, ymax = pred.hi), alpha = 0.4) +
-    scale_x_continuous(breaks = seq(min(yso), max(yso), by = 2)) +
+  dat <- dat.fn(ind.spp, yso, pdd, mod) %>%
+    mutate(x.pd = as.factor(x.pd))
+  p <- ggplot(dat, aes(x = x.yso, y = pred)) +
+    geom_ribbon(aes(ymin = pred.lo, ymax = pred.hi, fill = x.pd), alpha = 0.3) +
+    geom_line(aes(color = x.pd), size = 1) +
     ylim(0, 1) +
-    xlab(NULL) + ylab(NULL)
-  
-  p <- ggdraw() +
-    draw_plot(p1, x = 0, y = 0, width = 0.5, height = 0.95) +
-    draw_plot(p2, x = 0.5, y = 0, width = 0.5, height = 0.95) +
-    draw_plot_label(c(spp, spp), x = c(0.2, 0.7), y = c(1, 1))
-  assign(str_c("pp", i), p)
+    geom_vline(xintercept = -0.5, linetype = "dashed") +
+    scale_color_manual(values = c("#009E73", "#D55E00")) +
+    scale_fill_manual(values = c("#009E73", "#D55E00")) +
+    xlab(NULL) + ylab(NULL) +
+    guides(fill = F, color = F) +
+    annotate("text", x = 7.5, y = 1, label = spp)
+  assign(str_c("pp", spp), p)
 }
 
-p <- ggdraw() +
-  draw_plot(pp1, x = 0, y = 0.6666667, width = 0.5, height = 0.3333) +
-  draw_plot(pp2, x = 0.5, y = 0.6666667, width = 0.5, height = 0.3333) +
-  draw_plot(pp3, x = 0, y = 0.3333333, width = 0.5, height = 0.3333) +
-  draw_plot(pp4, x = 0.5, y = 0.3333333, width = 0.5, height = 0.3333) +
-  draw_plot(pp5, x = 0, y = 0, width = 0.5, height = 0.3333) +
-  draw_plot(pp6, x = 0.5, y = 0, width = 0.5, height = 0.3333)
+p1 <- ggdraw() +
+  draw_plot(ppATTW, y = 0.8, x = 0., width = 1, height = 0.2) +
+  draw_plot(ppSTJA, y = 0.6, x = 0, width = 1, height = 0.2) +
+  draw_plot(ppCORA, y = 0.4, x = 0, width = 1, height = 0.2) +
+  draw_plot(ppGCKI, y = 0.2, x = 0, width = 1, height = 0.2) +
+  draw_plot(ppPISI, y = 0, x = 0, width = 1, height = 0.2)
+
+p2 <- ggdraw() +
+  draw_plot(ppWAVI, y = 0.8, x = 0., width = 1, height = 0.2) +
+  draw_plot(ppCLNU, y = 0.6, x = 0, width = 1, height = 0.2) +
+  draw_plot(ppRBNU, y = 0.4, x = 0, width = 1, height = 0.2) +
+  draw_plot(ppHETH, y = 0.2, x = 0, width = 1, height = 0.2) +
+  draw_plot(ppDEJU, y = 0, x = 0, width = 1, height = 0.2)
 
 p <- ggdraw() +
-  draw_plot(p, x = 0.05, y = 0.05, width = 0.95, height = 0.95) +
-  draw_plot_label(c("Occupancy", "Percent dead conifer", "Years since outbreak",
-                    "Percent dead conifer", "Years since outbreak"),
-                  x = c(0, 0.13, 0.35, 0.6, 0.83), y = c(0.47, 0.05, 0.05, 0.05, 0.05),
-                  angle = c(90, 0, 0, 0, 0), size = c(20, 15, 15, 15, 15), hjust = c(0, 0, 0, 0, 0))
+  draw_plot(p1, x = 0.05, y = 0.05, width = 0.475, height = 0.95) +
+  draw_plot(p2, x = 0.525, y = 0.05, width = 0.475, height = 0.95) +
+  draw_plot_label(c("Occupancy", "Years since outbreak"),
+                  x = c(0, 0.43), y = c(0.47, 0.05),
+                  angle = c(90, 0), size = c(20, 15), hjust = c(0, 0))
 
-save_plot(str_c("Plot_spp_outbreak_", stratum, "1.tiff"), p, ncol = 4, nrow = 3, dpi = 200)
-
-##____ Group 2 - supported relations with YSO but not % dead ____##
-spp.plot <- c("BTLH", "NOFL", "GRAJ", "GCKI",
-              "RCKI", "HETH", "PIGR", "CAFI",
-              "RECR", "CHSP", "LISP", "WCSP",
-              "DEJU", "YRWA", "WETA")
-
-for(i in 1:length(spp.plot)) {
-  spp <- spp.plot[i]
-  ind.spp <- which(spp.list == spp)
-  
-  pdd <- Cov[, "DeadConif"]
-  pdd[which(Cov[, "YSO"] > maxyso)] <- NA
-  pdd <- pdd[-which(is.na(pdd))]
-  dat.pdead <- dat.pdead.fn(ind.spp, pdd, mod)
-  p1 <- ggplot(dat.pdead, aes(x = x.pdead, y = pred)) +
-    geom_line(size = 1) +
-    geom_ribbon(aes(ymin = pred.lo, ymax = pred.hi), alpha = 0.4) +
-    ylim(0, 1) +
-    xlab(NULL) + ylab(NULL)
-  
-  yso <- Cov[, "YSO"]
-  yso <- yso[-which(is.na(yso))]
-  dat.yso <- dat.yso.fn(ind.spp, yso, mod)
-  p2 <- ggplot(dat.yso, aes(x = x.yso, y = pred)) +
-    geom_line(size = 1) +
-    geom_ribbon(aes(ymin = pred.lo, ymax = pred.hi), alpha = 0.4) +
-    scale_x_continuous(breaks = seq(min(yso), max(yso), by = 2)) +
-    ylim(0, 1) +
-    xlab(NULL) + ylab(NULL)
-  
-  p <- ggdraw() +
-    draw_plot(p1, x = 0, y = 0, width = 0.5, height = 0.95) +
-    draw_plot(p2, x = 0.5, y = 0, width = 0.5, height = 0.95) +
-    draw_plot_label(c(spp, spp), x = c(0.2, 0.7), y = c(1, 1))
-  assign(str_c("pp", i), p)
-}
-
-p <- ggdraw() +
-  draw_plot(pp1, x = 0, y = 0.875, width = 0.5, height = 0.125) +
-  draw_plot(pp2, x = 0, y = 0.750, width = 0.5, height = 0.125) +
-  draw_plot(pp3, x = 0.5, y = 0.750, width = 0.5, height = 0.125) +
-  draw_plot(pp4, x = 0, y = 0.625, width = 0.5, height = 0.125) +
-  draw_plot(pp5, x = 0.5, y = 0.625, width = 0.5, height = 0.125) +
-  draw_plot(pp6, x = 0, y = 0.500, width = 0.5, height = 0.125) +
-  draw_plot(pp7, x = 0.5, y = 0.500, width = 0.5, height = 0.125) +
-  draw_plot(pp8, x = 0, y = 0.375, width = 0.5, height = 0.125) +
-  draw_plot(pp9, x = 0.5, y = 0.375, width = 0.5, height = 0.125) +
-  draw_plot(pp10, x = 0, y = 0.250, width = 0.5, height = 0.125) +
-  draw_plot(pp11, x = 0.5, y = 0.250, width = 0.5, height = 0.125) +
-  draw_plot(pp12, x = 0, y = 0.125, width = 0.5, height = 0.125) +
-  draw_plot(pp13, x = 0.5, y = 0.125, width = 0.5, height = 0.125) +
-  draw_plot(pp14, x = 0, y = 0, width = 0.5, height = 0.125) +
-  draw_plot(pp15, x = 0.5, y = 0, width = 0.5, height = 0.125)
-  
-p <- ggdraw() +
-  draw_plot(p, x = 0.05, y = 0.05, width = 0.95, height = 0.95) +
-  draw_plot_label(c("Occupancy", "Percent dead conifer", "Years since outbreak",
-                    "Percent dead conifer", "Years since outbreak"),
-                  x = c(0, 0.13, 0.35, 0.6, 0.83), y = c(0.47, 0.05, 0.05, 0.05, 0.05),
-                  angle = c(90, 0, 0, 0, 0), size = c(20, 15, 15, 15, 15), hjust = c(0, 0, 0, 0, 0))
-
-save_plot(str_c("Plot_spp_outbreak_", stratum, "2.tiff"), p, ncol = 4, nrow = 6, dpi = 200)
+save_plot(str_c("Plot_spp_outbreak_", stratum, ".tiff"), p, ncol = 2, nrow = 3, dpi = 200)
