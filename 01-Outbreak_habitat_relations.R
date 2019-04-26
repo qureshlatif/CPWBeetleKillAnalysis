@@ -65,6 +65,7 @@ p <- ggdraw() +
                   vjust = c(0, 0))
 
 save_plot("figure_DeadConif_VS_YSO.tiff", p, ncol = 2, nrow = 1, dpi = 200)
+#save_plot("figure_DeadConif_VS_YSO_presentation.tiff", p, ncol = 2, nrow = 1, dpi = 200)
 
 # Adjust data following review of this figure
 dat.LP <- dat.LP %>%
@@ -135,9 +136,9 @@ write.csv(out, "Outbreak_habitat_relations.csv", row.names = T)
 p.YSO <- function(dat.obs, dat.pred, ymax) {
   p <- ggplot(dat.obs, aes(x = YSO, y = habvar)) +
     geom_point(alpha = 0.1) +
-    geom_line(data = dat.pred, aes(x = YSO, y = fit), color = "red") +
-    geom_line(data = dat.pred, aes(x = YSO, y = lwr), linetype = "dashed", color = "red") +
-    geom_line(data = dat.pred, aes(x = YSO, y = upr), linetype = "dashed", color = "red") +
+    geom_line(data = dat.pred, aes(x = YSO, y = fit), color = "#D55E00") +
+    geom_line(data = dat.pred, aes(x = YSO, y = lwr), linetype = "dashed", color = "#D55E00") +
+    geom_line(data = dat.pred, aes(x = YSO, y = upr), linetype = "dashed", color = "#D55E00") +
     ylim(0, ymax) +
     xlab("Years since outbreak") + ylab(NULL)
   return(p)
@@ -146,9 +147,9 @@ p.YSO <- function(dat.obs, dat.pred, ymax) {
 p.DCON <- function(dat.obs, dat.pred, ymax) {
   p <- ggplot(dat.obs, aes(x = DeadConif, y = habvar)) +
     geom_point(alpha = 0.1) +
-    geom_line(data = dat.pred, aes(x = DeadConif, y = fit), color = "red") +
-    geom_line(data = dat.pred, aes(x = DeadConif, y = lwr), linetype = "dashed", color = "red") +
-    geom_line(data = dat.pred, aes(x = DeadConif, y = upr), linetype = "dashed", color = "red") +
+    geom_line(data = dat.pred, aes(x = DeadConif, y = fit), color = "#D55E00") +
+    geom_line(data = dat.pred, aes(x = DeadConif, y = lwr), linetype = "dashed", color = "#D55E00") +
+    geom_line(data = dat.pred, aes(x = DeadConif, y = upr), linetype = "dashed", color = "#D55E00") +
     ylim(0, ymax) +
     xlab("Dead conifer (%)") + ylab(NULL)
   return(p)
@@ -157,7 +158,7 @@ p.DCON <- function(dat.obs, dat.pred, ymax) {
 p.HEAT <- function(dat.pred, heat.legend.title) {
   p <- ggplot(dat.pred, aes(YSO, DeadConif)) +
     geom_tile(aes(fill = Y), color = "white") +
-    scale_fill_gradient(low = "green", high = "red") +
+    scale_fill_gradient(low = "#0072B2", high = "#D55E00") +
     ylab("Dead conifer (%)") +
     xlab("Years since outbreak") +
     theme(legend.title = element_text(size = 10),
@@ -201,7 +202,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "Canopy cover")
+p.heat <- p.HEAT(dat.pred, "CanCov")
 
 p.CC.LP <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -229,7 +230,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "Canopy cover")
+p.heat <- p.HEAT(dat.pred, "CanCov")
 
 p.CC.SF <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -258,7 +259,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "% Aspen")
+p.heat <- p.HEAT(dat.pred, "Aspen")
 
 p.AS.LP <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -286,7 +287,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "% Aspen")
+p.heat <- p.HEAT(dat.pred, "Aspen")
 
 p.AS.SF <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -315,7 +316,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "% Spruce")
+p.heat <- p.HEAT(dat.pred, "Spruce")
 
 p.ES.SF <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -344,7 +345,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "% Pine")
+p.heat <- p.HEAT(dat.pred, "Pine")
 
 p.Pine.LP <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -372,7 +373,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "% Pine")
+p.heat <- p.HEAT(dat.pred, "Pine")
 
 p.Pine.SF <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -422,7 +423,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "Shrub cover")
+p.heat <- p.HEAT(dat.pred, "ShrubCov")
 
 p.Shrub.LP <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -450,7 +451,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "Shrub cover")
+p.heat <- p.HEAT(dat.pred, "ShrubCov")
 
 p.Shrub.SF <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -479,7 +480,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "% Conifer")
+p.heat <- p.HEAT(dat.pred, "ConShrb")
 
 p.CShrb.LP <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -507,7 +508,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "% Conifer")
+p.heat <- p.HEAT(dat.pred, "ConShrb")
 
 p.CShrb.SF <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -553,7 +554,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "% Woody")
+p.heat <- p.HEAT(dat.pred, "Woody")
 
 p.Woody.LP <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -581,7 +582,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "% Woody")
+p.heat <- p.HEAT(dat.pred, "Woody")
 
 p.Woody.SF <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -610,7 +611,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "% Dead and down")
+p.heat <- p.HEAT(dat.pred, "DeadDown")
 
 p.DDCov.LP <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -638,7 +639,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "% Dead and down")
+p.heat <- p.HEAT(dat.pred, "DeadDown")
 
 p.DDCov.SF <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -667,7 +668,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "% Herbaceous")
+p.heat <- p.HEAT(dat.pred, "Herb")
 
 p.Herb.LP <- p.stitch.row(p.CC, p.DCon, p.heat)
 
@@ -695,7 +696,7 @@ for(i in YSO.limited) {
   dat.pred <- dat.pred %>% filter(!(YSO == i & DeadConif > maxdc))
 }
 dat.pred <- cbind(dat.pred, Y = predict.lm(mod, dat.pred))
-p.heat <- p.HEAT(dat.pred, "% Herbaceous")
+p.heat <- p.HEAT(dat.pred, "Herb")
 
 p.Herb.SF <- p.stitch.row(p.CC, p.DCon, p.heat)
 

@@ -8,9 +8,9 @@ setwd("C:/Users/Quresh.Latif/files/projects/CPW/")
 load("Data_compiled_RESQ.RData")
 
 #____________________________________________________ Script inputs _____________________________________________________________#
-stratum <- "SF" # Set stratum (LP or SF)
-maxYSOForPD <- 9 # Set to 12 for LP and 9 for SF
-model.file <- "CPWBeetleKillAnalysis/model_RESQ_outbreak_HZdist_SF_outbreak.jags"
+stratum <- "LP" # Set stratum (LP or SF)
+maxYSOForPD <- 12 # Set to 12 for LP and 9 for SF
+model.file <- "CPWBeetleKillAnalysis/model_RESQ_outbreak_HZdist_LP.jags"
 
 # MCMC values.  Adjust as needed.
 nc <- 3
@@ -18,7 +18,7 @@ nb <- 5000
 ni <- 40000
 nt <- 10
 
-save.out <- "mod_RESQ_outbreak_HZdist_SF_outbreak"
+save.out <- "mod_RESQ_outbreak_HZdist_LP"
 #________________________________________________________________________________________________________________________________#
 
 data <- list("Y",

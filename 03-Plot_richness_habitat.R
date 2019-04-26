@@ -150,8 +150,8 @@ dat.pred <- dat.pred %>%
          pred.lo = apply(SR.pred, 2, function(x) quantile(x, prob = 0.05, type = 8)),
          pred.hi = apply(SR.pred, 2, function(x) quantile(x, prob = 0.95, type = 8)))
 p <- ggplot(data = dat.SR %>% filter(!is.na(RCOV_Pine)), aes(x = RCOV_Pine, y = Y)) + 
-  geom_point(alpha = 0.3) + 
-  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.3) +
+  geom_point(alpha = 0.1) + 
+  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.1) +
   geom_ribbon(data = dat.pred, aes(x = x, ymin = pred.lo, ymax = pred.hi),
               alpha = 0.3, inherit.aes = F) +
   geom_line(data = dat.pred, aes(x = x, y = pred.md),
@@ -175,8 +175,58 @@ dat.pred <- dat.pred %>%
          pred.lo = apply(SR.pred, 2, function(x) quantile(x, prob = 0.05, type = 8)),
          pred.hi = apply(SR.pred, 2, function(x) quantile(x, prob = 0.95, type = 8)))
 p <- ggplot(data = dat.SR %>% filter(!is.na(RCOV_Pine)), aes(x = RCOV_Pine, y = Y)) + 
-  geom_point(alpha = 0.3) + 
-  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.3) +
+  geom_point(alpha = 0.1) + 
+  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.1) +
+  geom_ribbon(data = dat.pred, aes(x = x, ymin = pred.lo, ymax = pred.hi),
+              alpha = 0.3, inherit.aes = F) +
+  geom_line(data = dat.pred, aes(x = x, y = pred.md),
+            size = 1.5, inherit.aes = F) +
+  labs(x = vnam, y = NULL) +
+  ylim(miny, maxy)
+assign(str_c("p.", vnam, ".", stratum), p)
+
+vnam <- "Herb"
+v <- GHerb.b
+b <- mod$sims.list$bb.GHerb
+dat.pred <- data.frame(z = seq(min(v, na.rm = T), max(v, na.rm = T), length.out = 10)) %>%
+  mutate(x = z * sds[vnam] + mns[vnam])
+SR.pred <- matrix(NA, nrow = dim(b0)[1], ncol = nrow(dat.pred))
+for(i in 1:dim(SR.pred)[2]) {
+  theta <- expit(b0 + b*dat.pred$z[i])
+  SR.pred[, i] <- apply(psi * theta, 1, sum)
+}
+dat.pred <- dat.pred %>%
+  mutate(pred.md = apply(SR.pred, 2, median),
+         pred.lo = apply(SR.pred, 2, function(x) quantile(x, prob = 0.05, type = 8)),
+         pred.hi = apply(SR.pred, 2, function(x) quantile(x, prob = 0.95, type = 8)))
+p <- ggplot(data = dat.SR %>% filter(!is.na(HerbCov)), aes(x = HerbCov, y = Y)) + 
+  geom_point(alpha = 0.1) + 
+  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.1) +
+  geom_ribbon(data = dat.pred, aes(x = x, ymin = pred.lo, ymax = pred.hi),
+              alpha = 0.3, inherit.aes = F) +
+  geom_line(data = dat.pred, aes(x = x, y = pred.md),
+            size = 1.5, inherit.aes = F) +
+  labs(x = vnam, y = NULL) +
+  ylim(miny, maxy)
+assign(str_c("p.", vnam, ".", stratum), p)
+
+vnam <- "Woody"
+v <- Gwoody.b
+b <- mod$sims.list$bb.Gwoody
+dat.pred <- data.frame(z = seq(min(v, na.rm = T), max(v, na.rm = T), length.out = 10)) %>%
+  mutate(x = z * sds[vnam] + mns[vnam])
+SR.pred <- matrix(NA, nrow = dim(b0)[1], ncol = nrow(dat.pred))
+for(i in 1:dim(SR.pred)[2]) {
+  theta <- expit(b0 + b*dat.pred$z[i])
+  SR.pred[, i] <- apply(psi * theta, 1, sum)
+}
+dat.pred <- dat.pred %>%
+  mutate(pred.md = apply(SR.pred, 2, median),
+         pred.lo = apply(SR.pred, 2, function(x) quantile(x, prob = 0.05, type = 8)),
+         pred.hi = apply(SR.pred, 2, function(x) quantile(x, prob = 0.95, type = 8)))
+p <- ggplot(data = dat.SR %>% filter(!is.na(WoodyCov)), aes(x = WoodyCov, y = Y)) + 
+  geom_point(alpha = 0.1) + 
+  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.1) +
   geom_ribbon(data = dat.pred, aes(x = x, ymin = pred.lo, ymax = pred.hi),
               alpha = 0.3, inherit.aes = F) +
   geom_line(data = dat.pred, aes(x = x, y = pred.md),
@@ -310,6 +360,31 @@ names(mns) <- names(sds) <- c("CanCov", "Aspen", "Spruce",
 psi <- expit(mod$sims.list$d0)
 b0 <- mod$sims.list$b0
 
+vnam <- "Pine"
+v <- RCovPine.b
+b <- mod$sims.list$bb.RCovPine
+dat.pred <- data.frame(z = seq(min(v, na.rm = T), max(v, na.rm = T), length.out = 10)) %>%
+  mutate(x = z * sds[vnam] + mns[vnam])
+SR.pred <- matrix(NA, nrow = dim(b0)[1], ncol = nrow(dat.pred))
+for(i in 1:dim(SR.pred)[2]) {
+  theta <- expit(b0 + b*dat.pred$z[i])
+  SR.pred[, i] <- apply(psi * theta, 1, sum)
+}
+dat.pred <- dat.pred %>%
+  mutate(pred.md = apply(SR.pred, 2, median),
+         pred.lo = apply(SR.pred, 2, function(x) quantile(x, prob = 0.05, type = 8)),
+         pred.hi = apply(SR.pred, 2, function(x) quantile(x, prob = 0.95, type = 8)))
+p <- ggplot(data = dat.SR %>% filter(!is.na(RCOV_Pine)), aes(x = RCOV_Pine, y = Y)) + 
+  geom_point(alpha = 0.1) + 
+  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.1) +
+  geom_ribbon(data = dat.pred, aes(x = x, ymin = pred.lo, ymax = pred.hi),
+              alpha = 0.3, inherit.aes = F) +
+  geom_line(data = dat.pred, aes(x = x, y = pred.md),
+            size = 1.5, inherit.aes = F) +
+  labs(x = vnam, y = NULL) +
+  ylim(miny, maxy)
+assign(str_c("p.", vnam, ".", stratum), p)
+
 vnam <- "ShrubCov"
 v <- shcov.b
 b <- mod$sims.list$bb.ShCov
@@ -324,9 +399,9 @@ dat.pred <- dat.pred %>%
   mutate(pred.md = apply(SR.pred, 2, median),
          pred.lo = apply(SR.pred, 2, function(x) quantile(x, prob = 0.05, type = 8)),
          pred.hi = apply(SR.pred, 2, function(x) quantile(x, prob = 0.95, type = 8)))
-p <- ggplot(data = dat.SR %>% filter(!is.na(RCOV_Pine)), aes(x = RCOV_Pine, y = Y)) + 
-  geom_point(alpha = 0.3) + 
-  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.3) +
+p <- ggplot(data = dat.SR %>% filter(!is.na(shrub_cover)), aes(x = shrub_cover, y = Y)) + 
+  geom_point(alpha = 0.1) + 
+  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.1) +
   geom_ribbon(data = dat.pred, aes(x = x, ymin = pred.lo, ymax = pred.hi),
               alpha = 0.3, inherit.aes = F) +
   geom_line(data = dat.pred, aes(x = x, y = pred.md),
@@ -349,9 +424,9 @@ dat.pred <- dat.pred %>%
   mutate(pred.md = apply(SR.pred, 2, median),
          pred.lo = apply(SR.pred, 2, function(x) quantile(x, prob = 0.05, type = 8)),
          pred.hi = apply(SR.pred, 2, function(x) quantile(x, prob = 0.95, type = 8)))
-p <- ggplot(data = dat.SR %>% filter(!is.na(RCOV_Pine)), aes(x = RCOV_Pine, y = Y)) + 
-  geom_point(alpha = 0.3) + 
-  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.3) +
+p <- ggplot(data = dat.SR %>% filter(!is.na(RCShrb_UC)), aes(x = RCShrb_UC, y = Y)) + 
+  geom_point(alpha = 0.1) + 
+  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.1) +
   geom_ribbon(data = dat.pred, aes(x = x, ymin = pred.lo, ymax = pred.hi),
               alpha = 0.3, inherit.aes = F) +
   geom_line(data = dat.pred, aes(x = x, y = pred.md),
@@ -374,9 +449,9 @@ dat.pred <- dat.pred %>%
   mutate(pred.md = apply(SR.pred, 2, median),
          pred.lo = apply(SR.pred, 2, function(x) quantile(x, prob = 0.05, type = 8)),
          pred.hi = apply(SR.pred, 2, function(x) quantile(x, prob = 0.95, type = 8)))
-p <- ggplot(data = dat.SR %>% filter(!is.na(RCOV_Pine)), aes(x = RCOV_Pine, y = Y)) + 
-  geom_point(alpha = 0.3) + 
-  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.3) +
+p <- ggplot(data = dat.SR %>% filter(!is.na(HerbCov)), aes(x = HerbCov, y = Y)) + 
+  geom_point(alpha = 0.1) + 
+  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.1) +
   geom_ribbon(data = dat.pred, aes(x = x, ymin = pred.lo, ymax = pred.hi),
               alpha = 0.3, inherit.aes = F) +
   geom_line(data = dat.pred, aes(x = x, y = pred.md),
@@ -399,9 +474,9 @@ dat.pred <- dat.pred %>%
   mutate(pred.md = apply(SR.pred, 2, median),
          pred.lo = apply(SR.pred, 2, function(x) quantile(x, prob = 0.05, type = 8)),
          pred.hi = apply(SR.pred, 2, function(x) quantile(x, prob = 0.95, type = 8)))
-p <- ggplot(data = dat.SR %>% filter(!is.na(RCOV_Pine)), aes(x = RCOV_Pine, y = Y)) + 
-  geom_point(alpha = 0.3) + 
-  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.3) +
+p <- ggplot(data = dat.SR %>% filter(!is.na(DDCov)), aes(x = DDCov, y = Y)) + 
+  geom_point(alpha = 0.1) + 
+  geom_errorbar(aes(ymin = Y.lo, ymax = Y.hi), width = 0, alpha = 0.1) +
   geom_ribbon(data = dat.pred, aes(x = x, ymin = pred.lo, ymax = pred.hi),
               alpha = 0.3, inherit.aes = F) +
   geom_line(data = dat.pred, aes(x = x, y = pred.md),
@@ -412,15 +487,17 @@ assign(str_c("p.", vnam, ".", stratum), p)
 
 #_____ Put them all together _____#
 p <- ggdraw() + 
-  draw_plot(p.Pine.LP, x = 0.05, y = 0.05, width = 0.45, height = 0.9) +
-  draw_plot(p.ConShrb.LP, x = 0.5, y = 0.05, width = 0.5, height = 0.9) +
-  draw_plot(p.SF, x = 0.5, y = 0.05, width = 0.5, height = 0.9) +
-  draw_plot(p.SF, x = 0.5, y = 0.05, width = 0.5, height = 0.9) +
-  draw_plot(p.SF, x = 0.5, y = 0.05, width = 0.5, height = 0.9) +
-  draw_plot(p.SF, x = 0.5, y = 0.05, width = 0.5, height = 0.9) +
-  draw_plot_label(c("Bird species richness", "Lodgepole", "'Spruce-fir'"),
-                  x = c(0, 0.4, 0.25, 0.7), y = c(0.5, 0.05, 0.98, 0.98),
-                  size = c(20, 17, 17, 17), angle = c(90, 0, 0, 0),
-                  hjust = c(0, 0, 0, 0), parse = T)
+  draw_plot(p.Pine.LP, x = 0.03, y = 0.5, width = 0.2425, height = 0.45) +
+  draw_plot(p.ConShrb.LP, x = 0.2725, y = 0.5, width = 0.2425, height = 0.45) +
+  draw_plot(p.Herb.LP, x = 0.5150, y = 0.5, width = 0.2425, height = 0.45) +
+  draw_plot(p.Woody.LP, x = 0.7575, y = 0.5, width = 0.2425, height = 0.45) +
+  draw_plot(p.Pine.SF, x = 0.03, y = 0, width = 0.194, height = 0.45) +
+  draw_plot(p.ShrubCov.SF, x = 0.224, y = 0, width = 0.194, height = 0.45) +
+  draw_plot(p.ConShrb.SF, x = 0.418, y = 0, width = 0.194, height = 0.45) +
+  draw_plot(p.Herb.SF, x = 0.612, y = 0, width = 0.194, height = 0.45) +
+  draw_plot(p.DeadDown.SF, x = 0.806, y = 0, width = 0.194, height = 0.45) +
+  draw_plot_label(c("Bird species richness", "Lodgepole", "Spruce-fir"),
+                  x = c(0, 0.48, 0.48), y = c(0.37, 0.98, 0.49), size = c(20, 20, 20),
+                  angle = c(90, 0, 0), hjust = c(0, 0, 0))
 
-save_plot("Plot_richness_outbreak.tiff", p, ncol = 3, nrow = 1.5, dpi = 200)
+save_plot("Plot_richness_habitat.tiff", p, ncol = 4, nrow = 2.5, dpi = 200)

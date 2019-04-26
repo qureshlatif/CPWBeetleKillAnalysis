@@ -16,8 +16,7 @@ mod <- loadObject("mod_RESQ_habitat_HZdist_SF")
 pars <- c("beta0.mean", "beta0.sd", # Parameters of interest
           "bd.TWIP", "bd.heatload", "bd.TWI", "bd.RDens", "bd.WILD",
           "bl.pdead", "bl.YSO", "bl.YSO2", "bl.pdXYSO",
-          "bl.RCovAS", "bl.RCovES", "bl.RCovPine",
-          "bl.ccov", "bl.RCovPine", "bl.RCovES", "bl.RCovAS",
+          "bl.ccov", "bl.RCovAS", "bl.RCovES", "bl.RCovPine",
           "bl.shcov", "bl.RSC_Con", "bl.GHerb", "bl.Gwoody", "bl.GDD",
           "a0", "b", "a.Time", "a.Time2", "a.DOY", "a.DOY2",
           "a.pdead", "a.YSO", "a.YSO2", "a.pdXYSO",
@@ -25,7 +24,6 @@ pars <- c("beta0.mean", "beta0.sd", # Parameters of interest
           "bt.0", "bt.Time", "bt.Time2", "bt.DOY",
           "bt.DOY2", "bt.ccov", "bt.shcov")
 tab.out <- "Param_summ_RESQ.csv"
-samp.ha <- sum(area.band) * 0.0001
 #______________#
 
 # Parameter summary table #
@@ -37,3 +35,26 @@ sum.table <- mod$summary %>% tbl_df %>%
   mutate(n.eff = n.eff %>% as.integer)
 
 write.csv(sum.table, tab.out, row.names = F)
+
+### For MS ###
+mods <- c("mod_RESQ_outbreak_HZdist_LP", "mod_RESQ_outbreak_HZdist_SF",
+          "mod_RESQ_habitat_HZdist_LP", "mod_RESQ_habitat_HZdist_SF")
+mod.nams <- c("LP_outbrk", "SF_outbrk", "LP_hab", "SF_hab")
+sum.tab <- matrix(NA, nrow = length(pars), ncol = length(mods),
+                  dimnames = list(pars, mod.nams))
+
+for(j in 1:length(mods)) {
+  mod <- loadObject(mods[j])
+  for(i in 1:length(pars)) {
+    if(any(names(mod$sims.list) == pars[i])) {
+      p <- mod$sims.list[[pars[i]]]
+      sum.tab[i, j] <- str_c(median(p) %>% round(digits = 2),
+                             "(",
+                             quantile(p, prob = 0.05, type = 8) %>% round(digits = 2),
+                             ",",
+                             quantile(p, prob = 0.95, type = 8) %>% round(digits = 2),
+                             ")")
+    }
+  }}
+
+write.csv(sum.tab, tab.out, row.names = T)

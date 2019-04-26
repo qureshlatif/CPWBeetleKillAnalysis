@@ -12,11 +12,12 @@ load("Data_compiled_RESQ.RData")
 
 samp.ha <- sum(area.band) * 0.0001
 
+maxD <- 460 # upper limit for y-axis
+maxYSO <- 15
+
 ## Spruce-fir stratum ##
 stratum <- "SF" #Set to LP or SF
-mod <- loadObject("mod_RESQ_outbreak_HZdist_SF_outbreak")
-maxYSO <- 15
-maxD <- 650 # upper limit for y-axis
+mod <- loadObject("mod_RESQ_outbreak_HZdist_SF")
 
 # Plot outbreak relationships #
 Cov <- eval(as.name(str_c("Cov.", stratum)))
@@ -51,12 +52,12 @@ p.SF <- ggplot(dat.plt, aes(x = YSO, y = N.md)) +
   scale_color_manual(values = c("#009E73", "#D55E00")) +
   scale_fill_manual(values = c("#009E73", "#D55E00")) +
   xlab(NULL) + ylab(NULL) +
-  labs(fill = "Dead\nconifer\n(%)") +
-  labs(color = "Dead\nconifer\n(%)")
+  labs(fill = "DCon") +
+  labs(color = "DCon")
 
 ## Lodgepole pine stratum ##
 stratum <- "LP" #Set to LP or SF
-mod <- loadObject("mod_RESQ_outbreak_HZdist_LP_outbreak")
+mod <- loadObject("mod_RESQ_outbreak_HZdist_LP")
 
 # Plot outbreak relationships #
 Cov <- eval(as.name(str_c("Cov.", stratum)))

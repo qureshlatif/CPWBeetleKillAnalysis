@@ -38,7 +38,7 @@ parest_LP[, "theta"] <- apply(parm, 2, median)
 parest_LP[, "theta.lo"] <- apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8))
 parest_LP[, "theta.hi"] <- apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8))
 
-for(par in pars[-which(pars %in% c("theta", "bb.RCovPine"))]) {
+for(par in pars[-which(pars %in% c("theta"))]) {
   parm <- mod_SF$sims.list[[par]]
   parest_SF[, par] <- apply(parm, 2, median)
   parest_SF[, str_c(par, ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8))
@@ -64,7 +64,7 @@ ind.spp <- c(which(spp.list %in% spp.outbreak),
                which,
              parest_SF[, beta.cols[(beta.cols %>% str_detect(".hi") & !beta.cols %>% str_detect("RCovPine")) %>% which]] %>%
                apply(1, function(x) any(x < 0)) %>%
-               which) %>% unique %>% sort
+               which) %>% unique %>% sort %>% length
 spp.plt <- spp.list[ind.spp]
 
 dat.plt.LP <- parest_LP %>% tbl_df() %>%
@@ -93,12 +93,11 @@ dat.plt.SF <- parest_SF %>% tbl_df() %>%
   mutate(Spp = spp.list) %>%
   filter(Spp %in% spp.plt) %>%
   mutate(index = row_number()) %>%
-  mutate(index = (max(index) - index) + 1) %>%
-  select(theta:bb.RCovAS.hi, bb.RCovES:index)
+  mutate(index = (max(index) - index) + 1)
 dat.plt.SF$Spp[which(dat.plt.SF$Spp %in% spp.outbreak)] <-
   dat.plt.SF$Spp[which(dat.plt.SF$Spp %in% spp.outbreak)] %>% str_c("*")
 
-cols <- pars[-c(1, 3)] %>% str_c(".supp")
+cols <- pars[-1] %>% str_c(".supp")
 dat.supp <- matrix("none", nrow = nrow(dat.plt.SF), ncol = length(cols),
                    dimnames = list(NULL, cols))
 for(i in 1:length(cols)) {
@@ -112,6 +111,28 @@ dat.plt.SF <- dat.plt.SF %>%
   bind_cols(dat.supp %>% as.data.frame)
 
 rm(dat.supp, col.chck, chck)
+
+#### Summarize relationships by covariate ####
+cols <- c("LP_pos", "LP_neg", "LP_tot", "SF_pos", "SF_neg", "SF_tot")
+sum.tab <- matrix(0, nrow = length(pars[-1]), ncol = length(cols),
+                  dimnames = list(pars[-1], cols))
+for(i in pars[-1]) {
+  if(any(str_detect(dimnames(parest_LP)[[2]], i))) {
+    lo <- parest_LP[, which(str_detect(dimnames(parest_LP)[[2]], i) & str_detect(dimnames(parest_LP)[[2]], ".lo"))]
+    hi <- parest_LP[, which(str_detect(dimnames(parest_LP)[[2]], i) & str_detect(dimnames(parest_LP)[[2]], ".hi"))]
+    sum.tab[i, "LP_pos"] <- sum(lo > 0)
+    sum.tab[i, "LP_neg"] <- sum(hi < 0)
+  }
+  if(any(str_detect(dimnames(parest_SF)[[2]], i))) {
+    lo <- parest_SF[, which(str_detect(dimnames(parest_SF)[[2]], i) & str_detect(dimnames(parest_SF)[[2]], ".lo"))]
+    hi <- parest_SF[, which(str_detect(dimnames(parest_SF)[[2]], i) & str_detect(dimnames(parest_SF)[[2]], ".hi"))]
+    sum.tab[i, "SF_pos"] <- sum(lo > 0)
+    sum.tab[i, "SF_neg"] <- sum(hi < 0)
+  }
+}
+sum.tab[, "LP_tot"] <- sum.tab[, c("LP_pos", "LP_neg")] %>% apply(1, sum)
+sum.tab[, "SF_tot"] <- sum.tab[, c("SF_pos", "SF_neg")] %>% apply(1, sum)
+rm(i, lo, hi)
 
 #### Plots ####
 ## Lodgepole ##
@@ -137,7 +158,7 @@ p.CanCov <- ggplot(dat = dat.plt.LP, aes(x = index, y = bb.CanCov, color = bb.Ca
   scale_x_continuous(breaks = 1:nrow(dat.plt.LP), labels = dat.plt.LP$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("#0072B2", "dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Canopy cover"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["CanCov"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -149,7 +170,7 @@ p.RCovAS <- ggplot(dat = dat.plt.LP, aes(x = index, y = bb.RCovAS, color = bb.RC
   scale_x_continuous(breaks = 1:nrow(dat.plt.LP), labels = dat.plt.LP$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("#0072B2", "dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Aspen dom"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["Aspen"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -161,7 +182,7 @@ p.RCovPine <- ggplot(dat = dat.plt.LP, aes(x = index, y = bb.RCovPine, color = b
   scale_x_continuous(breaks = 1:nrow(dat.plt.LP), labels = dat.plt.LP$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("#0072B2", "dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Pine dom"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["Pine"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -173,7 +194,7 @@ p.ShCov <- ggplot(dat = dat.plt.LP, aes(x = index, y = bb.ShCov, color = bb.ShCo
   scale_x_continuous(breaks = 1:nrow(dat.plt.LP), labels = dat.plt.LP$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Shrub cover"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["ShrubCov"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -185,7 +206,7 @@ p.RSC_Con <- ggplot(dat = dat.plt.LP, aes(x = index, y = bb.RSC_Con, color = bb.
   scale_x_continuous(breaks = 1:nrow(dat.plt.LP), labels = dat.plt.LP$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("#0072B2", "dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Conifer shrub dom"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["ConShrb"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -197,7 +218,7 @@ p.GHerb <- ggplot(dat = dat.plt.LP, aes(x = index, y = bb.GHerb, color = bb.GHer
   scale_x_continuous(breaks = 1:nrow(dat.plt.LP), labels = dat.plt.LP$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("#0072B2", "dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Herbaceous cover"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["Herb"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -209,7 +230,7 @@ p.Gwoody <- ggplot(dat = dat.plt.LP, aes(x = index, y = bb.Gwoody, color = bb.Gw
   scale_x_continuous(breaks = 1:nrow(dat.plt.LP), labels = dat.plt.LP$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Woody stems"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["Woody"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -221,7 +242,7 @@ p.GDD <- ggplot(dat = dat.plt.LP, aes(x = index, y = bb.GDD, color = bb.GDD.supp
   scale_x_continuous(breaks = 1:nrow(dat.plt.LP), labels = dat.plt.LP$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("#0072B2", "dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Dead and down"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["DeadDown"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -248,9 +269,9 @@ p.theta <- ggplot(dat = dat.plt.SF, aes(x = index, y = theta)) +
   ylab(expression(hat(theta)["mean"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25))
 
-min.y <- min(c(dat.plt.SF$bb.RCovAS.lo, dat.plt.SF$bb.RCovES.lo, dat.plt.SF$bb.CanCov.lo, dat.plt.SF$bb.ShCov.lo,
+min.y <- min(c(dat.plt.SF$bb.RCovAS.lo, dat.plt.SF$bb.RCovPine.lo, dat.plt.SF$bb.RCovES.lo, dat.plt.SF$bb.CanCov.lo, dat.plt.SF$bb.ShCov.lo,
                dat.plt.SF$bb.RSC_Con.lo, dat.plt.SF$bb.GHerb.lo, dat.plt.SF$bb.Gwoody.lo, dat.plt.SF$bb.GDD.lo))
-max.y <- max(c(dat.plt.SF$bb.RCovAS.hi, dat.plt.SF$bb.RCovES.hi, dat.plt.SF$bb.CanCov.hi, dat.plt.SF$bb.ShCov.hi,
+max.y <- max(c(dat.plt.SF$bb.RCovAS.hi, dat.plt.SF$bb.RCovPine.hi, dat.plt.SF$bb.RCovES.hi, dat.plt.SF$bb.CanCov.hi, dat.plt.SF$bb.ShCov.hi,
                dat.plt.SF$bb.RSC_Con.hi, dat.plt.SF$bb.GHerb.hi, dat.plt.SF$bb.Gwoody.hi, dat.plt.SF$bb.GDD.hi))
 
 p.CanCov <- ggplot(dat = dat.plt.SF, aes(x = index, y = bb.CanCov, color = bb.CanCov.supp)) +
@@ -261,7 +282,7 @@ p.CanCov <- ggplot(dat = dat.plt.SF, aes(x = index, y = bb.CanCov, color = bb.Ca
   scale_x_continuous(breaks = 1:nrow(dat.plt.SF), labels = dat.plt.SF$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("#0072B2", "dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Canopy cover"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["CanCov"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -273,7 +294,19 @@ p.RCovAS <- ggplot(dat = dat.plt.SF, aes(x = index, y = bb.RCovAS, color = bb.RC
   scale_x_continuous(breaks = 1:nrow(dat.plt.SF), labels = dat.plt.SF$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("#0072B2", "dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Aspen dom"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["Aspen"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  guides(color = F)
+
+p.RCovPine <- ggplot(dat = dat.plt.SF, aes(x = index, y = bb.RCovPine, color = bb.RCovPine.supp)) +
+  geom_errorbar(aes(ymin = bb.RCovPine.lo, ymax = bb.RCovPine.hi, color = bb.RCovPine.supp), size=1, width=0) +
+  geom_point(size = 2.5) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.SF), labels = dat.plt.SF$Spp %>% rev, expand=c(0, 1)) +
+  scale_y_continuous(lim = c(min.y, max.y)) +
+  scale_color_manual(values = c("#0072B2", "dark gray", "#D55E00")) +
+  ylab(expression(hat(beta)["Pine"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -285,7 +318,7 @@ p.RCovES <- ggplot(dat = dat.plt.SF, aes(x = index, y = bb.RCovES, color = bb.RC
   scale_x_continuous(breaks = 1:nrow(dat.plt.SF), labels = dat.plt.SF$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("#0072B2", "dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Spruce dom"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["Spruce"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -297,7 +330,7 @@ p.ShCov <- ggplot(dat = dat.plt.SF, aes(x = index, y = bb.ShCov, color = bb.ShCo
   scale_x_continuous(breaks = 1:nrow(dat.plt.SF), labels = dat.plt.SF$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Shrub cover"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["ShrubCov"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -309,7 +342,7 @@ p.RSC_Con <- ggplot(dat = dat.plt.SF, aes(x = index, y = bb.RSC_Con, color = bb.
   scale_x_continuous(breaks = 1:nrow(dat.plt.SF), labels = dat.plt.SF$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("#0072B2", "dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Conifer shrub dom"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["ConShrb"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -321,7 +354,7 @@ p.GHerb <- ggplot(dat = dat.plt.SF, aes(x = index, y = bb.GHerb, color = bb.GHer
   scale_x_continuous(breaks = 1:nrow(dat.plt.SF), labels = dat.plt.SF$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("#0072B2", "dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Herbaceous cover"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["Herb"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -333,7 +366,7 @@ p.Gwoody <- ggplot(dat = dat.plt.SF, aes(x = index, y = bb.Gwoody, color = bb.Gw
   scale_x_continuous(breaks = 1:nrow(dat.plt.SF), labels = dat.plt.SF$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("#0072B2", "dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Woody stems"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["Woody"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
@@ -345,18 +378,19 @@ p.GDD <- ggplot(dat = dat.plt.SF, aes(x = index, y = bb.GDD, color = bb.GDD.supp
   scale_x_continuous(breaks = 1:nrow(dat.plt.SF), labels = dat.plt.SF$Spp %>% rev, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("dark gray", "#D55E00")) +
-  ylab(expression(hat(beta)["Dead and down"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["DeadDown"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   guides(color = F)
 
 p <- ggdraw() + 
-  draw_plot(p.theta, x = 0.0000000, y = 0, width = 0.1111111, height = 1) +
-  draw_plot(p.CanCov, x = 0.1111111, y = 0, width = 0.1111111, height = 1) +
-  draw_plot(p.RCovAS, x = 0.2222222, y = 0, width = 0.1111111, height = 1) +
-  draw_plot(p.RCovES, x = 0.3333333, y = 0, width = 0.1111111, height = 1) +
-  draw_plot(p.ShCov, x = 0.4444444, y = 0, width = 0.1111111, height = 1) +
-  draw_plot(p.RSC_Con, x = 0.5555556, y = 0, width = 0.1111111, height = 1) +
-  draw_plot(p.GHerb, x = 0.6666667, y = 0, width = 0.1111111, height = 1) +
-  draw_plot(p.Gwoody, x = 0.7777778, y = 0, width = 0.1111111, height = 1) +
-  draw_plot(p.GDD, x = 0.8888889, y = 0, width = 0.1111111, height = 1)
+  draw_plot(p.theta, x = 0, y = 0, width = 0.1, height = 1) +
+  draw_plot(p.CanCov, x = 0.1, y = 0, width = 0.1, height = 1) +
+  draw_plot(p.RCovAS, x = 0.2, y = 0, width = 0.1, height = 1) +
+  draw_plot(p.RCovES, x = 0.3, y = 0, width = 0.1, height = 1) +
+  draw_plot(p.RCovPine, x = 0.4, y = 0, width = 0.1, height = 1) +
+  draw_plot(p.ShCov, x = 0.5, y = 0, width = 0.1, height = 1) +
+  draw_plot(p.RSC_Con, x = 0.6, y = 0, width = 0.1, height = 1) +
+  draw_plot(p.GHerb, x = 0.7, y = 0, width = 0.1, height = 1) +
+  draw_plot(p.Gwoody, x = 0.8, y = 0, width = 0.1, height = 1) +
+  draw_plot(p.GDD, x = 0.9, y = 0, width = 0.1, height = 1)
 save_plot("Plot_habitat_effects_SF.tiff", p, ncol = 6, nrow = 3, dpi = 200)

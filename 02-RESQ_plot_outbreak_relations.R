@@ -14,7 +14,7 @@ samp.ha <- sum(area.band) * 0.0001
 
 ## Spruce-fir stratum ##
 stratum <- "SF" #Set to LP or SF
-mod <- loadObject("mod_RESQ_outbreak_HZdist_SF_outbreak")
+mod <- loadObject("mod_RESQ_outbreak_HZdist_SF")
 maxYSO <- 14
 
 # Plot outbreak relationships #
@@ -77,7 +77,7 @@ p.SF <- ggdraw() +
 
 ## Lodgepole pine stratum ##
 stratum <- "LP" #Set to LP or SF
-mod <- loadObject("mod_RESQ_outbreak_HZdist_LP_outbreak")
+mod <- loadObject("mod_RESQ_outbreak_HZdist_LP")
 
 # Plot outbreak relationships #
 Cov <- eval(as.name(str_c("Cov.", stratum)))

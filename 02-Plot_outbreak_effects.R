@@ -41,13 +41,14 @@ dat <- parest_LP %>% tbl_df() %>%
   mutate(index = row_number())
 
 p.pdead.LP <- ggplot(dat = dat, aes(x = index, y = bb.pdead)) +
-  geom_errorbar(aes(ymin = bb.pdead.lo, ymax = bb.pdead.hi), size=1, width=0) +
-  geom_point(size = 2.5) + 
+  geom_errorbar(aes(ymin = bb.pdead.lo, ymax = bb.pdead.hi), size=0.5, width=0) +
+  geom_point(size = 1) + 
   geom_hline(yintercept = 0) +
   coord_flip() +
   scale_x_continuous(breaks = NULL, labels = NULL, expand=c(0, 1)) +
-  scale_y_continuous(lim = c(min(dat$bb.pdead.lo), max(dat$bb.pdead.hi))) +
-  ylab(expression(hat(beta)["DCon"])) + xlab(NULL)
+  scale_y_continuous(lim = c(min(dat$bb.pdead.lo), max(dat$bb.pdead.hi)),
+                     breaks = c(-0.2, 0, 0.2)) +
+  ylab(NULL) + xlab(NULL)
 
 ## Years since outbreak, lodgepole ##
 dat <- parest_LP %>% tbl_df() %>%
@@ -56,13 +57,13 @@ dat <- parest_LP %>% tbl_df() %>%
   mutate(index = row_number())
 
 p.YSO.LP <- ggplot(dat = dat, aes(x = index, y = bb.YSO)) +
-  geom_errorbar(aes(ymin = bb.YSO.lo, ymax = bb.YSO.hi), size=1, width=0) +
-  geom_point(size = 2.5) + 
+  geom_errorbar(aes(ymin = bb.YSO.lo, ymax = bb.YSO.hi), size=0.5, width=0) +
+  geom_point(size = 1) + 
   geom_hline(yintercept = 0) +
   coord_flip() +
   scale_x_continuous(breaks = NULL, labels = NULL, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min(dat$bb.YSO.lo), max(dat$bb.YSO.hi))) +
-  ylab(expression(hat(beta)["YSO"])) + xlab(NULL)
+  ylab(NULL) + xlab(NULL)
 
 ## Years since outbreak - squared, lodgepole ##
 dat <- parest_LP %>% tbl_df() %>%
@@ -71,13 +72,13 @@ dat <- parest_LP %>% tbl_df() %>%
   mutate(index = row_number())
 
 p.YSO2.LP <- ggplot(dat = dat, aes(x = index, y = bb.YSO2)) +
-  geom_errorbar(aes(ymin = bb.YSO2.lo, ymax = bb.YSO2.hi), size=1, width=0) +
-  geom_point(size = 2.5) + 
+  geom_errorbar(aes(ymin = bb.YSO2.lo, ymax = bb.YSO2.hi), size=0.5, width=0) +
+  geom_point(size = 1) + 
   geom_hline(yintercept = 0) +
   coord_flip() +
   scale_x_continuous(breaks = NULL, labels = NULL, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min(dat$bb.YSO2.lo), max(dat$bb.YSO2.hi))) +
-  ylab(expression(hat(beta)["YSO"^2])) + xlab(NULL)
+  ylab(NULL) + xlab(NULL)
 
 ## Percent dead X Years since outbreak, lodgepole ##
 dat <- parest_LP %>% tbl_df() %>%
@@ -86,13 +87,13 @@ dat <- parest_LP %>% tbl_df() %>%
   mutate(index = row_number())
 
 p.DConXYSO.LP <- ggplot(dat = dat, aes(x = index, y = bb.pdXYSO)) +
-  geom_errorbar(aes(ymin = bb.pdXYSO.lo, ymax = bb.pdXYSO.hi), size=1, width=0) +
-  geom_point(size = 2.5) + 
+  geom_errorbar(aes(ymin = bb.pdXYSO.lo, ymax = bb.pdXYSO.hi), size=0.5, width=0) +
+  geom_point(size = 1) + 
   geom_hline(yintercept = 0) +
   coord_flip() +
   scale_x_continuous(breaks = NULL, labels = NULL, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min(dat$bb.pdXYSO.lo), max(dat$bb.pdXYSO.hi))) +
-  ylab(expression(hat(beta)["DCon X YSO"])) + xlab(NULL)
+  ylab(NULL) + xlab(NULL)
 
 ## Percent dead, spruce-fir ##
 dat <- parest_SF %>% tbl_df() %>%
@@ -101,13 +102,14 @@ dat <- parest_SF %>% tbl_df() %>%
   mutate(index = row_number())
 
 p.pdead.SF <- ggplot(dat = dat, aes(x = index, y = bb.pdead)) +
-  geom_errorbar(aes(ymin = bb.pdead.lo, ymax = bb.pdead.hi), size=1, width=0) +
-  geom_point(size = 2.5) + 
+  geom_errorbar(aes(ymin = bb.pdead.lo, ymax = bb.pdead.hi), size=0.5, width=0) +
+  geom_point(size = 1) + 
   geom_hline(yintercept = 0) +
   coord_flip() +
   scale_x_continuous(breaks = NULL, labels = NULL, expand=c(0, 1)) +
-  scale_y_continuous(lim = c(min(dat$bb.pdead.lo), max(dat$bb.pdead.hi))) +
-  ylab(expression(hat(beta)["DCon"])) + xlab(NULL)
+  scale_y_continuous(lim = c(min(dat$bb.pdead.lo), max(dat$bb.pdead.hi)),
+                     breaks = c(-0.5, 0, 0.5)) +
+  ylab(NULL) + xlab(NULL)
 
 ## Years since outbreak, spruce-fir ##
 dat <- parest_SF %>% tbl_df() %>%
@@ -116,13 +118,13 @@ dat <- parest_SF %>% tbl_df() %>%
   mutate(index = row_number())
 
 p.YSO.SF <- ggplot(dat = dat, aes(x = index, y = bb.YSO)) +
-  geom_errorbar(aes(ymin = bb.YSO.lo, ymax = bb.YSO.hi), size=1, width=0) +
-  geom_point(size = 2.5) + 
+  geom_errorbar(aes(ymin = bb.YSO.lo, ymax = bb.YSO.hi), size=0.5, width=0) +
+  geom_point(size = 1) + 
   geom_hline(yintercept = 0) +
   coord_flip() +
   scale_x_continuous(breaks = NULL, labels = NULL, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min(dat$bb.YSO.lo), max(dat$bb.YSO.hi))) +
-  ylab(expression(hat(beta)["YSO"])) + xlab(NULL)
+  ylab(NULL) + xlab(NULL)
 
 ## Years since outbreak - squared, spruce-fir ##
 dat <- parest_SF %>% tbl_df() %>%
@@ -131,13 +133,13 @@ dat <- parest_SF %>% tbl_df() %>%
   mutate(index = row_number())
 
 p.YSO2.SF <- ggplot(dat = dat, aes(x = index, y = bb.YSO2)) +
-  geom_errorbar(aes(ymin = bb.YSO2.lo, ymax = bb.YSO2.hi), size=1, width=0) +
-  geom_point(size = 2.5) + 
+  geom_errorbar(aes(ymin = bb.YSO2.lo, ymax = bb.YSO2.hi), size=0.5, width=0) +
+  geom_point(size = 1) + 
   geom_hline(yintercept = 0) +
   coord_flip() +
   scale_x_continuous(breaks = NULL, labels = NULL, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min(dat$bb.YSO2.lo), max(dat$bb.YSO2.hi))) +
-  ylab(expression(hat(beta)["YSO"^2])) + xlab(NULL)
+  ylab(NULL) + xlab(NULL)
 
 ## Percent dead X Years since outbreak, spruce-fir ##
 dat <- parest_SF %>% tbl_df() %>%
@@ -146,32 +148,32 @@ dat <- parest_SF %>% tbl_df() %>%
   mutate(index = row_number())
 
 p.DConXYSO.SF <- ggplot(dat = dat, aes(x = index, y = bb.pdXYSO)) +
-  geom_errorbar(aes(ymin = bb.pdXYSO.lo, ymax = bb.pdXYSO.hi), size=1, width=0) +
-  geom_point(size = 2.5) + 
+  geom_errorbar(aes(ymin = bb.pdXYSO.lo, ymax = bb.pdXYSO.hi), size=0.5, width=0) +
+  geom_point(size = 1) + 
   geom_hline(yintercept = 0) +
   coord_flip() +
   scale_x_continuous(breaks = NULL, labels = NULL, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min(dat$bb.pdXYSO.lo), max(dat$bb.pdXYSO.hi))) +
-  ylab(expression(hat(beta)["DCon X YSO"])) + xlab(NULL)
+  ylab(NULL) + xlab(NULL)
 
-p.LP <- ggdraw() + 
-  draw_plot(p.pdead.LP, x = 0, y = 0, width = 0.25, height = 1) +
-  draw_plot(p.YSO.LP, x = 0.25, y = 0, width = 0.25, height = 1) +
-  draw_plot(p.YSO2.LP, x = 0.5, y = 0, width = 0.25, height = 1) +
-  draw_plot(p.DConXYSO.LP, x = 0.75, y = 0, width = 0.25, height = 1)
-p.SF <- ggdraw() + 
-  draw_plot(p.pdead.SF, x = 0, y = 0, width = 0.25, height = 1) +
-  draw_plot(p.YSO.SF, x = 0.25, y = 0, width = 0.25, height = 1) +
-  draw_plot(p.YSO2.SF, x = 0.5, y = 0, width = 0.25, height = 1) +
-  draw_plot(p.DConXYSO.SF, x = 0.75, y = 0, width = 0.25, height = 1)
-p <- ggdraw() +
-  draw_plot(p.LP, x = 0, y = 0.5, width = 1, height = 0.45) +
-  draw_plot(p.SF, x = 0, y = 0, width = 1, height = 0.45) +
-  draw_plot_label(c("Spruce-fir", "Lodgepole pine"),
-                  x = c(0.44, 0.41),
-                  y = c(0.48, 0.98))
-
-save_plot("Plot_outbreak_effects_allspp.tiff", p, ncol = 2, nrow = 3, dpi = 200)
+p.LP.all <- ggdraw() + 
+  draw_plot(p.pdead.LP, x = 0.05, y = 0, width = 0.2, height = 1) +
+  draw_plot(p.YSO.LP, x = 0.3, y = 0, width = 0.2, height = 1) +
+  draw_plot(p.YSO2.LP, x = 0.55, y = 0, width = 0.2, height = 1) +
+  draw_plot(p.DConXYSO.LP, x = 0.8, y = 0, width = 0.2, height = 1)
+p.SF.all <- ggdraw() + 
+  draw_plot(p.pdead.SF, x = 0.05, y = 0, width = 0.2, height = 1) +
+  draw_plot(p.YSO.SF, x = 0.3, y = 0, width = 0.2, height = 1) +
+  draw_plot(p.YSO2.SF, x = 0.55, y = 0, width = 0.2, height = 1) +
+  draw_plot(p.DConXYSO.SF, x = 0.8, y = 0, width = 0.2, height = 1)
+# p <- ggdraw() +
+#   draw_plot(p.LP, x = 0, y = 0.5, width = 1, height = 0.45) +
+#   draw_plot(p.SF, x = 0, y = 0, width = 1, height = 0.45) +
+#   draw_plot_label(c("Spruce-fir", "Lodgepole pine"),
+#                   x = c(0.44, 0.41),
+#                   y = c(0.48, 0.98))
+# 
+# save_plot("Plot_outbreak_effects_allspp.tiff", p, ncol = 2, nrow = 3, dpi = 200)
 
 
 #### Plots for spp with supported outbreak effects ####
@@ -232,7 +234,7 @@ p.pdead.LP <- ggplot(dat = dat.plt, aes(x = index, y = bb.pdead, color = bb.pdea
   scale_x_continuous(breaks = 1:nrow(dat.plt), labels = dat.plt$Spp, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("#0072B2", "#000000")) +
-  ylab(expression(hat(beta)["pdead"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["DCon"])) + xlab(NULL) +
   guides(color = F)
 
 # Years since outbreak #
@@ -283,7 +285,7 @@ p.pdead.SF <- ggplot(dat = dat.plt, aes(x = index, y = bb.pdead, color = bb.pdea
   scale_x_continuous(breaks = 1:nrow(dat.plt), labels = dat.plt$Spp, expand=c(0, 1)) +
   scale_y_continuous(lim = c(min.y, max.y)) +
   scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
-  ylab(expression(hat(beta)["pdead"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["DCon"])) + xlab(NULL) +
   guides(color = F)
 
 # Years since outbreak #
@@ -322,21 +324,30 @@ p.pdXYSO.SF <- ggplot(dat = dat.plt, aes(x = index, y = bb.pdXYSO, color = bb.pd
   ylab(expression(hat(beta)["DCon X YSO"])) + xlab(NULL) +
   guides(color = F)
 
-p.LP <- ggdraw() + 
+p.LP.supp <- ggdraw() + 
   draw_plot(p.pdead.LP, x = 0, y = 0, width = 0.25, height = 1) +
   draw_plot(p.YSO.LP, x = 0.25, y = 0, width = 0.25, height = 1) +
   draw_plot(p.YSO2.LP, x = 0.5, y = 0, width = 0.25, height = 1) +
   draw_plot(p.pdXYSO.LP, x = 0.75, y = 0, width = 0.25, height = 1)
-p.SF <- ggdraw() + 
+p.SF.supp <- ggdraw() + 
   draw_plot(p.pdead.SF, x = 0, y = 0, width = 0.25, height = 1) +
   draw_plot(p.YSO.SF, x = 0.25, y = 0, width = 0.25, height = 1) +
   draw_plot(p.YSO2.SF, x = 0.5, y = 0, width = 0.25, height = 1) +
   draw_plot(p.pdXYSO.SF, x = 0.75, y = 0, width = 0.25, height = 1)
-p <- ggdraw() +
-  draw_plot(p.LP, x = 0, y = 0.5, width = 1, height = 0.45) +
-  draw_plot(p.SF, x = 0, y = 0, width = 1, height = 0.45) +
-  draw_plot_label(c("Spruce-fir", "Lodgepole pine"),
-                  x = c(0.44, 0.41),
-                  y = c(0.48, 0.98))
 
-save_plot("Plot_outbreak_effects_SuppSpp.tiff", p, ncol = 3.5, nrow = 4.5, dpi = 200)
+p.LP <- ggdraw() +
+  draw_plot(p.LP.all, x = 0, y = 0.75, width = 1, height = 0.25) +
+  draw_plot(p.LP.supp, x = 0, y = 0, width = 1, height = 0.75)
+p.SF <- ggdraw() +
+  draw_plot(p.SF.all, x = 0, y = 0.75, width = 1, height = 0.25) +
+  draw_plot(p.SF.supp, x = 0, y = 0, width = 1, height = 0.75)
+
+
+p <- ggdraw() +
+  draw_plot(p.LP, x = 0, y = 0, width = 0.475, height = 0.95) +
+  draw_plot(p.SF, x = 0.525, y = 0, width = 0.475, height = 0.95) +
+  draw_plot_label(c("Lodgepole pine", "Spruce-fir"),
+                  x = c(0.15, 0.73),
+                  y = c(0.98, 0.98))
+
+save_plot("Plot_outbreak_effects.tiff", p, ncol = 4.5, nrow = 3.5, dpi = 300)
