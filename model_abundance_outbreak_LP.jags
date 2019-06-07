@@ -21,13 +21,9 @@
       beta0.mean ~ dnorm(0, 0.1)
       beta0.sd ~ dunif(0, 10)
       beta0.tau <- pow(beta0.sd, -2)
-      
-      bd.heatload ~ dnorm(0, 0.1)
-      bd.TWI ~ dnorm(0, 0.1)
 
       for(g in 1:nGrid) {
-        beta00[g] ~ dnorm(beta0.mean, beta0.tau)
-        beta0[g] <- beta00[g] + bd.heatload*heatload.d[g] + bd.TWI*TWI.d[g]
+        beta0[g] ~ dnorm(beta0.mean, beta0.tau)
       }
 
       bl.pdead ~ dnorm(0, 0.1)
@@ -45,10 +41,10 @@
 
       # Impute missing data
       for(j in 1:nPoint) {
-        YSO.b.imp[j] ~ dunif(YSO.mins[gridID[j]], YSO.maxs[gridID[j]])
-        yso[j] <- YSO.b[j]*(1 - YSO.missing[j]) + YSO.b.imp[j]*YSO.missing[j]
         PctDead.b.imp[j] ~ dnorm(PctDead.b[j], pow(PctDead.sd[j], -2))T(PctDead.lower,)
         pdead[j] <- PctDead.b[j]*(1-PctDead.b.missing[j]) + PctDead.b.imp[j]*PctDead.b.missing[j]
+        YSO.b.imp[j] ~ dunif(YSO.mins[gridID[j]], YSO.maxs[gridID[j]])
+        yso[j] <- YSO.b[j]*(1 - YSO.missing[j]) + YSO.b.imp[j]*YSO.missing[j]
         RCovAS.b.imp[j] ~ dnorm(RCovAS.d[gridID[j]], pow(RCovAS.sd[gridID[j]], -2))T(RCovAS.lower,)
         RCovAS[j] <- RCovAS.b[j]*(1 - RCovAS.b.missing[j]) + RCovAS.b.imp[j]*RCovAS.b.missing[j]
         RCovPine.b.imp[j] ~ dnorm(RCovPine.d[gridID[j]], pow(RCovPine.sd[gridID[j]], -2))T(RCovPine.lower,)
