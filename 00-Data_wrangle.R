@@ -47,7 +47,8 @@ SubSppToSpp <- function(dat) {
 
 #### Compile species list ####
 BCRDataAPI::reset_api()
-BCRDataAPI::set_api_server('analysis.api.birdconservancy.org')
+#BCRDataAPI::set_api_server('analysis.api.birdconservancy.org')
+BCRDataAPI::set_api_server('192.168.137.196')
 BCRDataAPI::add_columns(c('Year|int',
                           'primaryHabitat|str',
                           'Stratum|str',
@@ -103,7 +104,8 @@ spp.excluded <- grab %>%
 
 #### Detection data ####
 BCRDataAPI::reset_api()
-BCRDataAPI::set_api_server('analysis.api.birdconservancy.org')
+#BCRDataAPI::set_api_server('analysis.api.birdconservancy.org')
+BCRDataAPI::set_api_server('192.168.137.196')
 BCRDataAPI::add_columns(c('TransectNum|str',
                           'Point|int',
                           'Year|int',
