@@ -27,8 +27,9 @@ load("Data_compiled.RData")
 
 ## Lodgepole, outbreak ##
 stratum <- "SF" #Set to LP or SF
-mod <- loadObject("mod_SFcommunity_habitat_reduced")
-pars <- c("p_star", "p_star_md", "ba.Time", "ba.Time2", "ba.DOY", "ba.DOY2", "ba.ccov", "ba.shcov")
+mod <- loadObject("mod_LPcommunity_outbreak_reduced2")
+#pars <- c("p_star", "p_star_md", "ba.Time", "ba.Time2", "ba.DOY", "ba.DOY2", "ba.ccov", "ba.shcov")
+pars <- c("p_star", "p_star_md", "ba.Time", "ba.Time2", "ba.DOY", "ba.DOY2", "ba.pdead", "ba.YSO")
 #_________________________________________________________#
 
 # Tabulate parameter estimates

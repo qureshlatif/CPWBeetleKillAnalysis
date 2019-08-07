@@ -6,6 +6,7 @@ library(R.utils)
 setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 load("Data_compiled.RData")
 
+#___________________ Covariate relations only ______________________#
 stratum <- c("LP", "LP", "SF", "SF") # Select LP or SF
 mod.type <- c("outbreak", "habitat", "outbreak", "habitat")
 mods <- c("mod_LPcommunity_outbreak_reduced2", "mod_LPcommunity_habitat_reduced",
@@ -48,3 +49,40 @@ for(m in 1:length(mods)) {
 }
 
 out %>% write.csv("Hyper_parameters.csv", row.names = T)
+#__________________________________________________________________#
+
+#____________________________ All _________________________________#
+mods <- c("mod_LPcommunity_outbreak_reduced2", "mod_LPcommunity_habitat_reduced",
+          "mod_SFcommunity_outbreak_reduced2", "mod_SFcommunity_habitat_reduced")
+params <- c("omega", "rho.ab", "rho.bd", "alpha0", "sigma.a0",
+            "beta0", "sigma.b0", "delta0", "sigma.d0",
+            "Betab.PctDead", "sigma.Betab.PctDead", "Betab.YSO", "sigma.Betab.YSO",
+            "Betab.YSO2", "sigma.Betab.YSO2", "Betab.PctDdXYSO", "sigma.Betab.PctDdXYSO",
+            "Betab.CanCov", "sigma.Betab.CanCov", "Betab.RCovAS", "sigma.Betab.RCovAS",
+            "Betab.RCovES", "sigma.Betab.RCovES", "Betab.RCovPine", "sigma.Betab.RCovPine",
+            "Betab.ShCov", "sigma.Betab.ShCov", "Betab.RSC_Con", "sigma.Betab.RSC_Con",
+            "Betab.GHerb", "sigma.Betab.GHerb", "Betab.Gwoody", "sigma.Betab.Gwoody",
+            "Betab.GDD", "sigma.Betab.GDD", "Betaa.Time", "sigma.Betaa.Time",
+            "Betaa.Time2", "sigma.Betaa.Time2", "Betaa.DOY", "sigma.Betaa.DOY",
+            "Betaa.DOY2", "sigma.Betaa.DOY2", "Betaa.PctDead", "sigma.Betaa.PctDead",
+            "Betaa.YSO", "sigma.Betaa.YSO", "Betaa.CCov", "sigma.Betaa.CCov",
+            "Betaa.SHCov", "sigma.Betaa.SHCov")
+out <- matrix(NA, nrow = length(params), ncol = length(mods),
+              dimnames = list(params, mods))
+
+for(m in 1:length(mods)) {
+  mod <- loadObject(mods[m])
+  for(p in which(params %in% names(mod$sims.list)))
+    out[p, m] <- str_c(
+      median(mod$sims.list[[params[p]]]) %>% round(digits = 2),
+      " (",
+      quantile(mod$sims.list[[params[p]]],
+               prob = 0.05, type = 8) %>% round(digits = 2),
+      ",",
+      quantile(mod$sims.list[[params[p]]],
+               prob = 0.95, type = 8) %>% round(digits = 2),
+      ")")
+}
+
+out %>% write.csv("Hyper_parameters.csv", row.names = T)
+#__________________________________________________________________#
