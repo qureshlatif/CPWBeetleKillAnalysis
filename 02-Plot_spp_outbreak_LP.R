@@ -13,6 +13,7 @@ load("Data_compiled.RData")
 stratum <- "LP"
 mod <- loadObject("mod_LPcommunity_outbreak_reduced2")
 maxyso <- 12 # Set to 12 for LP and 9 for SF
+theme_set(theme_cowplot())
 #___________________________#
 Cov <- str_c("Cov.", stratum) %>% as.name %>% eval
 
