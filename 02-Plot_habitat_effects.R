@@ -64,7 +64,7 @@ ind.spp <- c(which(spp.list %in% spp.outbreak),
                which,
              parest_SF[, beta.cols[(beta.cols %>% str_detect(".hi") & !beta.cols %>% str_detect("RCovPine")) %>% which]] %>%
                apply(1, function(x) any(x < 0)) %>%
-               which) %>% unique %>% sort %>% length
+               which) %>% unique %>% sort
 spp.plt <- spp.list[ind.spp]
 
 dat.plt.LP <- parest_LP %>% tbl_df() %>%
