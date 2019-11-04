@@ -35,18 +35,20 @@ out <- matrix("", nrow = length(rows), ncol  = length(cols),
 
 for(r in 1:length(rows)) {
   vec <- dat.LP[, rows[r]] %>% as.matrix %>% as.numeric
-  out[rows[r], "LP.pt"] <- vec %>% median(na.rm = T) %>% round(digits = 2) %>%
-    str_c(" (", vec %>% quantile(prob = 0.05, type = 8, na.rm = T) %>% round(digits = 2), ", ",
-          vec %>% quantile(prob = 0.25, type = 8, na.rm = T) %>% round(digits = 2), ", ",
-          vec %>% quantile(prob = 0.75, type = 8, na.rm = T) %>% round(digits = 2), ", ",
-          vec %>% quantile(prob = 0.95, type = 8, na.rm = T) %>% round(digits = 2), ")")
+  out[rows[r], "LP.pt"] <- str_c(vec %>% mean(na.rm = T) %>% round(digits = 2), ", ",
+                                 vec %>% median(na.rm = T) %>% round(digits = 2)," (",
+                                 vec %>% quantile(prob = 0.25, type = 8, na.rm = T) %>% round(digits = 2), ", ",
+                                 vec %>% quantile(prob = 0.75, type = 8, na.rm = T) %>% round(digits = 2), ", ",
+                                 vec %>% min(na.rm = T) %>% round(digits = 2), "-",
+                                 vec %>% max(na.rm = T) %>% round(digits = 2), ")")
   out[rows[r], "npt.LP"] <- sum(!is.na(vec))
   vec <- dat.SF[, rows[r]] %>% as.matrix %>% as.numeric
-  out[rows[r], "SF.pt"] <- vec %>% median(na.rm = T) %>% round(digits = 2) %>%
-    str_c(" (", vec %>% quantile(prob = 0.05, type = 8, na.rm = T) %>% round(digits = 2), ", ",
-          vec %>% quantile(prob = 0.25, type = 8, na.rm = T) %>% round(digits = 2), ", ",
-          vec %>% quantile(prob = 0.75, type = 8, na.rm = T) %>% round(digits = 2), ", ",
-          vec %>% quantile(prob = 0.95, type = 8, na.rm = T) %>% round(digits = 2), ")")
+  out[rows[r], "SF.pt"] <- str_c(vec %>% mean(na.rm = T) %>% round(digits = 2), ", ",
+                                 vec %>% median(na.rm = T) %>% round(digits = 2)," (",
+                                 vec %>% quantile(prob = 0.25, type = 8, na.rm = T) %>% round(digits = 2), ", ",
+                                 vec %>% quantile(prob = 0.75, type = 8, na.rm = T) %>% round(digits = 2), ", ",
+                                 vec %>% min(na.rm = T) %>% round(digits = 2), "-",
+                                 vec %>% max(na.rm = T) %>% round(digits = 2), ")")
   out[rows[r], "npt.SF"] <- sum(!is.na(vec))
 }
 
