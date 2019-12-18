@@ -2,6 +2,7 @@ require(dplyr)
 require(stringr)
 require(ggplot2)
 require(cowplot)
+theme_set(theme_cowplot())
 
 setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 load("Data_compiled.RData")
@@ -56,7 +57,7 @@ p.SF <- ggplot(data = dat.SF %>%
 p <- ggdraw() + 
   draw_plot(p.LP, x = 0.05, y = 0.05, width = 0.475, height = 0.95) +
   draw_plot(p.SF, x = 0.525, y = 0.05, width = 0.475, height = 0.95) +
-  draw_plot_label(c("Dead conifer", "Years since outbreak"),
+  draw_plot_label(c("Dead conifer (%)", "Years since outbreak"),
                   x = c(0.03, 0.4),
                   y = c(0.35, 0.03),
                   size = c(15, 15),
@@ -64,7 +65,7 @@ p <- ggdraw() +
                   hjust = c(0, 0),
                   vjust = c(0, 0))
 
-save_plot("figure_DeadConif_VS_YSO.tiff", p, ncol = 2, nrow = 1, dpi = 200)
+save_plot("figure_DeadConif_VS_YSO.tiff", p, ncol = 2, nrow = 1.5, dpi = 200)
 #save_plot("figure_DeadConif_VS_YSO_presentation.tiff", p, ncol = 2, nrow = 1, dpi = 200)
 
 # Adjust data following review of this figure

@@ -48,9 +48,13 @@ dat.fn <- function(ind.spp, yso, pdead, mod) {
 spp.plot <- c("MODO", "ATTW", "OSFL", "WEWP", "DUFL", "COFL", "VGSW",
               "HOWR", "RCKI", "TOSO", "HETH", "AMRO", "GTTO", "LISP",
               "WCSP", "DEJU", "BHCO", "MGWA", "YRWA", "WIWA", "WETA")
+relat.labs <- c("YSO+", "YSO+", "YSO+", "YSO+", "YSO+", "YSO+", "YSO-",
+              "YSO+", "DCon-", "YSOlag", "YSOpeak", "YSO+", "YSOlag", "YSO+",
+              "YSO+", "YSO+", "YSO+", "YSO+", "DConXYSO", "YSO+", "YSOlag")
 
 for(i in 1:length(spp.plot)) {
   spp <- spp.plot[i]
+  rlab <- relat.labs[i]
   ind.spp <- which(spp.list == spp)
   
   pdd <- Cov[, "DeadConif"]
@@ -68,7 +72,8 @@ for(i in 1:length(spp.plot)) {
     scale_fill_manual(values = c("#009E73", "#D55E00")) +
     xlab(NULL) + ylab(NULL) +
     guides(fill = F, color = F) +
-    annotate("text", x = 7.5, y = 1, label = spp)
+    annotate("text", x = 7.5, y = 1, label = spp) +
+    annotate("text", x = 7.5, y = 0.8, label = rlab)
   assign(str_c("pp", spp), p)
 }
 
