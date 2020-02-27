@@ -4,6 +4,7 @@ library(dplyr)
 library(R.utils)
 library(ggplot2)
 library(cowplot)
+theme_set(theme_cowplot())
 
 setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 load("Data_compiled.RData")
@@ -342,7 +343,6 @@ p.SF <- ggdraw() +
   draw_plot(p.SF.all, x = 0, y = 0.75, width = 1, height = 0.25) +
   draw_plot(p.SF.supp, x = 0, y = 0, width = 1, height = 0.75)
 
-
 p <- ggdraw() +
   draw_plot(p.LP, x = 0, y = 0, width = 0.475, height = 0.95) +
   draw_plot(p.SF, x = 0.525, y = 0, width = 0.475, height = 0.95) +
@@ -351,3 +351,13 @@ p <- ggdraw() +
                   y = c(0.98, 0.98))
 
 save_plot("Plot_outbreak_effects.tiff", p, ncol = 4.5, nrow = 3.5, dpi = 300)
+
+# Presentation version without top panel #
+p <- ggdraw() +
+  draw_plot(p.LP.supp, x = 0, y = 0, width = 0.475, height = 0.95) +
+  draw_plot(p.SF.supp, x = 0.525, y = 0, width = 0.475, height = 0.95) +
+  draw_plot_label(c("Lodgepole pine", "Spruce-fir"),
+                  x = c(0.15, 0.73),
+                  y = c(0.98, 0.98))
+
+save_plot("Plot_outbreak_effects_presentation.tiff", p, ncol = 3, nrow = 3, dpi = 300)

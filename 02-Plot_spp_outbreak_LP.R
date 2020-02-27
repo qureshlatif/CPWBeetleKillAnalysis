@@ -72,8 +72,8 @@ for(i in 1:length(spp.plot)) {
     scale_fill_manual(values = c("#009E73", "#D55E00")) +
     xlab(NULL) + ylab(NULL) +
     guides(fill = F, color = F) +
-    annotate("text", x = 7.5, y = 1, label = spp) +
-    annotate("text", x = 7.5, y = 0.8, label = rlab)
+    annotate("text", x = 7.5, y = 1, label = spp)# +
+    #annotate("text", x = 7.5, y = 0.8, label = rlab)
   assign(str_c("pp", spp), p)
 }
 
