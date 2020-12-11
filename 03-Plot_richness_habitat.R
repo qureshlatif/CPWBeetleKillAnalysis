@@ -132,6 +132,7 @@ sds <- dat.SR %>%
 names(mns) <- names(sds) <- c("CanCov", "Aspen", "Spruce",
                               "Pine", "ShrubCov", "ConShrb",
                               "Herb", "Woody", "DeadDown")
+omega <- mod$sims.list$omega
 psi <- expit(mod$sims.list$d0)
 b0 <- mod$sims.list$b0
 
@@ -143,7 +144,7 @@ dat.pred <- data.frame(z = seq(min(v, na.rm = T), max(v, na.rm = T), length.out 
 SR.pred <- matrix(NA, nrow = dim(b0)[1], ncol = nrow(dat.pred))
 for(i in 1:dim(SR.pred)[2]) {
   theta <- expit(b0 + b*dat.pred$z[i])
-  SR.pred[, i] <- apply(psi * theta, 1, sum)
+  SR.pred[, i] <- omega * apply(psi * theta, 1, sum)
 }
 dat.pred <- dat.pred %>%
   mutate(pred.md = apply(SR.pred, 2, median),
@@ -168,7 +169,7 @@ dat.pred <- data.frame(z = seq(min(v, na.rm = T), max(v, na.rm = T), length.out 
 SR.pred <- matrix(NA, nrow = dim(b0)[1], ncol = nrow(dat.pred))
 for(i in 1:dim(SR.pred)[2]) {
   theta <- expit(b0 + b*dat.pred$z[i])
-  SR.pred[, i] <- apply(psi * theta, 1, sum)
+  SR.pred[, i] <- omega * apply(psi * theta, 1, sum)
 }
 dat.pred <- dat.pred %>%
   mutate(pred.md = apply(SR.pred, 2, median),
@@ -193,7 +194,7 @@ dat.pred <- data.frame(z = seq(min(v, na.rm = T), max(v, na.rm = T), length.out 
 SR.pred <- matrix(NA, nrow = dim(b0)[1], ncol = nrow(dat.pred))
 for(i in 1:dim(SR.pred)[2]) {
   theta <- expit(b0 + b*dat.pred$z[i])
-  SR.pred[, i] <- apply(psi * theta, 1, sum)
+  SR.pred[, i] <- omega * apply(psi * theta, 1, sum)
 }
 dat.pred <- dat.pred %>%
   mutate(pred.md = apply(SR.pred, 2, median),
@@ -218,7 +219,7 @@ dat.pred <- data.frame(z = seq(min(v, na.rm = T), max(v, na.rm = T), length.out 
 SR.pred <- matrix(NA, nrow = dim(b0)[1], ncol = nrow(dat.pred))
 for(i in 1:dim(SR.pred)[2]) {
   theta <- expit(b0 + b*dat.pred$z[i])
-  SR.pred[, i] <- apply(psi * theta, 1, sum)
+  SR.pred[, i] <- omega * apply(psi * theta, 1, sum)
 }
 dat.pred <- dat.pred %>%
   mutate(pred.md = apply(SR.pred, 2, median),
@@ -357,6 +358,7 @@ sds <- dat.SR %>%
 names(mns) <- names(sds) <- c("CanCov", "Aspen", "Spruce",
                               "Pine", "ShrubCov", "ConShrb",
                               "Herb", "Woody", "DeadDown")
+omega <- mod$sims.list$omega
 psi <- expit(mod$sims.list$d0)
 b0 <- mod$sims.list$b0
 
@@ -368,7 +370,7 @@ dat.pred <- data.frame(z = seq(min(v, na.rm = T), max(v, na.rm = T), length.out 
 SR.pred <- matrix(NA, nrow = dim(b0)[1], ncol = nrow(dat.pred))
 for(i in 1:dim(SR.pred)[2]) {
   theta <- expit(b0 + b*dat.pred$z[i])
-  SR.pred[, i] <- apply(psi * theta, 1, sum)
+  SR.pred[, i] <- omega * apply(psi * theta, 1, sum)
 }
 dat.pred <- dat.pred %>%
   mutate(pred.md = apply(SR.pred, 2, median),
@@ -393,7 +395,7 @@ dat.pred <- data.frame(z = seq(min(v, na.rm = T), max(v, na.rm = T), length.out 
 SR.pred <- matrix(NA, nrow = dim(b0)[1], ncol = nrow(dat.pred))
 for(i in 1:dim(SR.pred)[2]) {
   theta <- expit(b0 + b*dat.pred$z[i])
-  SR.pred[, i] <- apply(psi * theta, 1, sum)
+  SR.pred[, i] <- omega * apply(psi * theta, 1, sum)
 }
 dat.pred <- dat.pred %>%
   mutate(pred.md = apply(SR.pred, 2, median),
@@ -418,7 +420,7 @@ dat.pred <- data.frame(z = seq(min(v, na.rm = T), max(v, na.rm = T), length.out 
 SR.pred <- matrix(NA, nrow = dim(b0)[1], ncol = nrow(dat.pred))
 for(i in 1:dim(SR.pred)[2]) {
   theta <- expit(b0 + b*dat.pred$z[i])
-  SR.pred[, i] <- apply(psi * theta, 1, sum)
+  SR.pred[, i] <- omega * apply(psi * theta, 1, sum)
 }
 dat.pred <- dat.pred %>%
   mutate(pred.md = apply(SR.pred, 2, median),
@@ -443,7 +445,7 @@ dat.pred <- data.frame(z = seq(min(v, na.rm = T), max(v, na.rm = T), length.out 
 SR.pred <- matrix(NA, nrow = dim(b0)[1], ncol = nrow(dat.pred))
 for(i in 1:dim(SR.pred)[2]) {
   theta <- expit(b0 + b*dat.pred$z[i])
-  SR.pred[, i] <- apply(psi * theta, 1, sum)
+  SR.pred[, i] <- omega * apply(psi * theta, 1, sum)
 }
 dat.pred <- dat.pred %>%
   mutate(pred.md = apply(SR.pred, 2, median),
@@ -468,7 +470,7 @@ dat.pred <- data.frame(z = seq(min(v, na.rm = T), max(v, na.rm = T), length.out 
 SR.pred <- matrix(NA, nrow = dim(b0)[1], ncol = nrow(dat.pred))
 for(i in 1:dim(SR.pred)[2]) {
   theta <- expit(b0 + b*dat.pred$z[i])
-  SR.pred[, i] <- apply(psi * theta, 1, sum)
+  SR.pred[, i] <- omega * apply(psi * theta, 1, sum)
 }
 dat.pred <- dat.pred %>%
   mutate(pred.md = apply(SR.pred, 2, median),

@@ -10,9 +10,9 @@ setwd("C:/Users/Quresh.Latif/files/projects/CPW")
 load("Data_compiled.RData")
 
 #_______Script inputs_______#
-stratum <- "SF"
-mod <- loadObject("mod_SFcommunity_outbreak_reduced2")
-maxyso <- 9 # Set to 12 for LP and 9 for SF
+stratum <- "LP"
+mod <- loadObject("mod_LPcommunity_outbreak_reduced2")
+maxyso <- 12 # Set to 12 for LP and 9 for SF
 #___________________________#
 Cov <- str_c("Cov.", stratum) %>% as.name %>% eval
 
@@ -50,6 +50,7 @@ dat.pred.YSO <- data.frame(x.yso = x.yso, z.yso = z.yso)
 
 rm(x.mn, x.sd, x.yso, z.yso, x.pd, z.pd)
 
+omega <- mod$sims.list$omega # Probability of species occurring in the super community
 psi <- expit(mod$sims.list$d0)
 b0 <- mod$sims.list$b0
 b.pdead <- mod$sims.list$bb.pdead
@@ -59,7 +60,7 @@ b.yso2 <- mod$sims.list$bb.YSO2
 SR.pred.DCon <- matrix(NA, nrow = dim(b0)[1], ncol = nrow(dat.pred.DCon))
 for(i in 1:dim(SR.pred.DCon)[2]) {
   theta <- expit(b0 + b.pdead*dat.pred.DCon$z.pd[i])
-  SR.pred.DCon[, i] <- apply(psi * theta, 1, sum)
+  SR.pred.DCon[, i] <- omega * apply(psi * theta, 1, sum)
 }
 dat.pred.DCon <- dat.pred.DCon %>%
   mutate(pred.md = apply(SR.pred.DCon, 2, median),
@@ -70,7 +71,7 @@ write.csv(dat.pred.DCon, str_c("Spp_richness_pred_DCon_cache_", stratum, ".csv")
 SR.pred.YSO <- matrix(NA, nrow = dim(b0)[1], ncol = nrow(dat.pred.YSO))
 for(i in 1:dim(SR.pred.YSO)[2]) {
   theta <- expit(b0 + b.yso*dat.pred.YSO$z.yso[i] + b.yso2*(dat.pred.YSO$z.yso[i]^2))
-  SR.pred.YSO[, i] <- apply(psi * theta, 1, sum)
+  SR.pred.YSO[, i] <- omega * apply(psi * theta, 1, sum)
 }
 dat.pred.YSO <- dat.pred.YSO %>%
   mutate(pred.md = apply(SR.pred.YSO, 2, median),
